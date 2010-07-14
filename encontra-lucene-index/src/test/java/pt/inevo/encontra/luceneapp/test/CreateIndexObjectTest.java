@@ -1,12 +1,14 @@
 package pt.inevo.encontra.luceneapp.test;
 
 import java.io.FileNotFoundException;
+import java.io.Serializable;
+
 import junit.framework.TestCase;
+import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.AbstractObject;
-import pt.inevo.encontra.lucene.index.LuceneEncontraIndex;
-import pt.inevo.encontra.lucene.index.LuceneDescriptor;
-import pt.inevo.encontra.lucene.index.LuceneDescriptorExtractor;
+import pt.inevo.encontra.index.IndexedObject;
+import pt.inevo.encontra.lucene.index.LuceneIndex;
+import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 
 /**
@@ -15,18 +17,28 @@ import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
  */
 public class CreateIndexObjectTest extends TestCase {
 
-    private class TestObject extends AbstractObject<Integer,String>{}
-    
-    private class D1Extractor implements DescriptorExtractor<TestObject,LuceneDescriptor> {
+    public static class TestObject extends IndexedObject<Integer,String> {}
+
+    public static class D1 extends SimpleDescriptor{
+        @Override
+        public double getDistance(Descriptor other) {
+            return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+    }
+
+    public static class D1Extractor extends DescriptorExtractor<TestObject,D1> {
 
         @Override
-        public LuceneDescriptor extract(TestObject object) {
-            return new LuceneDescriptor();
+        protected TestObject setupIndexedObject(D1 descriptor, TestObject object) {
+            object.setValue(descriptor.getValue());
+            return object;  //To change body of implemented methods use File | Settings | File Templates.
         }
 
         @Override
-        public LuceneDescriptor newDescriptor(Class<LuceneDescriptor> clazz) {
-            return new LuceneDescriptor();
+        public D1 extract(TestObject object) {
+            D1 d = new D1();
+            d.setValue("It works!");
+            return d;
         }
 
     }
@@ -46,21 +58,22 @@ public class CreateIndexObjectTest extends TestCase {
     }
 
     public void testMain() throws FileNotFoundException {
-        DescriptorExtractor<TestObject, LuceneDescriptor> d=new D1Extractor();
+        DescriptorExtractor<TestObject, D1> d=new D1Extractor();
         
-        LuceneEncontraIndex<TestObject> index=new LuceneEncontraIndex<TestObject>("lucene");
+        LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("lucene",TestObject.class);
 
-        LuceneDescriptorExtractor<TestObject> extractor=new LuceneDescriptorExtractor<TestObject>(new DescriptorExtractor[]{d});
-        index.setExtractor(extractor);
+        DescriptorExtractor<TestObject,D1> extractor=new D1Extractor();
+        LuceneIndexEntryFactory<D1> entryFactory=new LuceneIndexEntryFactory<D1>(D1.class);
+
+        index.setEntryFactory(entryFactory);
         
-        LuceneIndexEntryFactory<TestObject> entryFactory=new LuceneIndexEntryFactory<TestObject>(extractor);
+
 
 
         TestObject object = new TestObject();
         object.setId(1);
-        object.setObject("test");
-        LuceneDescriptor entry = entryFactory.createIndexEntry(object);
-        index.insert(entry);
+        object.setValue("Does it work?");
+        index.insert(object);
 
         //Integer objectId = (Integer) builder.getObjectId(entry);
         //assertEquals("Works",descriptor.getStringRepresentation());

@@ -17,16 +17,18 @@ import org.apache.lucene.store.NoLockFactory;
 
 import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.storage.IEntity;
+import pt.inevo.encontra.storage.IEntry;
 
-public class LuceneEncontraIndex<O extends IndexedObject> extends AbstractIndex<O> implements PersistentIndex<O>{
+public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements PersistentIndex<O>{
 
     protected String id;
 
     IndexWriter writer;
     IndexReader reader;
 
-    public LuceneEncontraIndex(String id) {
+    public LuceneIndex(String id,Class <O> descriptorClass) {
         this.id = id;
+        this.setEntryFactory(new LuceneIndexEntryFactory(descriptorClass));
     }
 
 
@@ -168,7 +170,8 @@ public class LuceneEncontraIndex<O extends IndexedObject> extends AbstractIndex<
     }
 
     @Override
-    public void save(IEntity object) {
+    public IEntity save(IEntity object) {
+        return null;
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
