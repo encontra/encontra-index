@@ -65,13 +65,12 @@ public class NBTreeDescriptor extends VectorDescriptor<Double> {
 
     @Override
     public Object getValue() {
-        //TO DO - what does this should do?
-        return new Object();
+        return this.getDoubleRepresentation();
     }
 
     @Override
     public void setValue(Object o) {
-        //TO DO - what does this should do?
+        setValues((double[])o);
     }
 
     @Override

@@ -1,33 +1,34 @@
 package pt.inevo.encontra.nbtree.index;
 
-import java.io.Serializable;
 import pt.inevo.encontra.index.IndexEntry;
+import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.keys.Key;
 
+public class NBTreeIndexEntry<K extends Key, V extends NBTreeDescriptor> implements IndexEntry<K,V> {
 
-public class NBTreeIndexEntry implements IndexEntry {
-    private Serializable key;
-    private Object value;
+    protected K key;
+    protected V value;
 
     public NBTreeIndexEntry(){
     }
 
     @Override
-    public Serializable getKey() {
+    public K getKey() {
         return key;
     }
 
     @Override
-    public void setKey(Serializable key) {
+    public void setKey(K key) {
         this.key=key;
     }
 
     @Override
-    public Object getValue() {
+    public V getValue() {
         return value;
     }
 
     @Override
-    public void setValue(Object o) {
+    public void setValue(V o) {
        this.value=o;
     }
 }
