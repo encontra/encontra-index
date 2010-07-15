@@ -2,7 +2,7 @@ package pt.inevo.encontra.nbtree.keys;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import pt.inevo.encontra.nbtree.NBPoint;
+import pt.inevo.encontra.nbtree.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.util.AeSimpleSHA1;
 import pt.inevo.encontra.nbtree.util.Util;
 
@@ -10,12 +10,12 @@ import pt.inevo.encontra.nbtree.util.Util;
  * Given a NBPoint, it returns a key that represents the point
  * @author ricardo
  */
-public class EuclideanNormKeyMapper implements KeyMapper {
+public class EuclideanNormKeyMapper implements KeyMapper<Key> {
 
     @Override
-    public Key getKey(NBPoint point) {
+    public Key getKey(NBTreeDescriptor point) {
 
-        double [] p = point.toArray();
+        double [] p = point.getDoubleRepresentation();
         double n = norm(p);
         String id = "";
         try {
@@ -28,6 +28,7 @@ public class EuclideanNormKeyMapper implements KeyMapper {
         return new Key(n, id);
     }
 
+    //calculate the norm of a vector
     private double norm(double[] descriptor) {
         int i;
         double val = 0.0;

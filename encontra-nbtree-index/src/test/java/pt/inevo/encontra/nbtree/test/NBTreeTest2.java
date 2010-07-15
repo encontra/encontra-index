@@ -5,10 +5,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import pt.inevo.encontra.nbtree.NBPoint;
-import pt.inevo.encontra.nbtree.NBPointList;
+import pt.inevo.encontra.common.distance.DistanceMeasure;
+import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
+import pt.inevo.encontra.nbtree.NBTreeDescriptorList;
 import pt.inevo.encontra.nbtree.NBTree;
-import pt.inevo.encontra.nbtree.distances.DistancePointCalculator;
+import pt.inevo.encontra.nbtree.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.keys.KeyMapper;
 import pt.inevo.encontra.nbtree.util.Util;
 
@@ -37,11 +38,6 @@ public class NBTreeTest2 {
     public void tearDown() {
     }
 
-    // TODO add test methods here.
-    // The methods must be annotated with annotation @Test. For example:
-    //
-    // @Test
-    // public void hello() {}
     @Test
     public void test() {
         try {
@@ -84,26 +80,29 @@ public class NBTreeTest2 {
 
             System.out.println("Inserting the points in the nbtree");
             for (int i = 0; i < descriptors.length; i++) {
-                nbTree.insertPoint(new NBPoint(descriptors[i]));
+                NBTreeDescriptor descriptor = new NBTreeDescriptor(descriptors[0].length, "Object" + i, new EuclideanDistanceMeasure());
+                descriptor.setValues(descriptors[i]);
+                nbTree.insertPoint(descriptor);
             }
             System.out.println("All the elements inserted in the nbtree\n");
 
             int k = 15;
-            NBPoint query = new NBPoint(descriptors[0]);
+            NBTreeDescriptor query = new NBTreeDescriptor(descriptors[0].length, "Object0", new EuclideanDistanceMeasure());
+            query.setValues(descriptors[0]);
             System.out.println("Getting the " + k + " most similar to a given descriptor:");
 
             //testing the point A
             System.out.println("Descriptor used: " + Util.doubleArrayToString(descriptors[0], ','));
-            NBPointList results = nbTree.knnQuery(query, k);
+            NBTreeDescriptorList results = nbTree.knnQuery(query, k);
 
             System.out.println("Number of return elements: " + results.getSize());
             System.out.println("The most similar are: \n");
-            DistancePointCalculator distanceCalculator = nbTree.getDistanceCalculator();
-            KeyMapper keyMapper = nbTree.getPointMapper();
-            for (NBPoint point : results.getAllPoints()) {
-                double[] value = point.toArray();
+            DistanceMeasure distanceCalculator = nbTree.getDistanceMeasure();
+            KeyMapper keyMapper = nbTree.getKeyMapper();
+            for (NBTreeDescriptor point : results.getAllPoints()) {
+                double[] value = point.getDoubleRepresentation();
                 System.out.print(Util.doubleArrayToString(value, ','));
-                System.out.println(" - distance:" + distanceCalculator.getDistance(query,point) +
+                System.out.println(" - distance:" + distanceCalculator.distance(query,point) +
                         "[key=" + keyMapper.getKey(point).getValue() + "]");
             }
 
@@ -112,10 +111,10 @@ public class NBTreeTest2 {
             results = nbTree.rangeQuery(query, 0.05);
             System.out.println("Number of returned results: " + results.getSize());
 
-            for (NBPoint point : results.getAllPoints()) {
-                double[] value = point.toArray();
+            for (NBTreeDescriptor point : results.getAllPoints()) {
+                double[] value = point.getDoubleRepresentation();
                 System.out.print(Util.doubleArrayToString(value, ','));
-                System.out.println(" - distance:" + distanceCalculator.getDistance(query,point) +
+                System.out.println(" - distance:" + distanceCalculator.distance(query,point) +
                         "[key=" + keyMapper.getKey(point).getValue() + "]");
             }
 

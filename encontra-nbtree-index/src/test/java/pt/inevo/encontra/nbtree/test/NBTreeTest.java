@@ -5,10 +5,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import pt.inevo.encontra.nbtree.NBPoint;
-import pt.inevo.encontra.nbtree.NBPointList;
+import pt.inevo.encontra.common.distance.DistanceMeasure;
+import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
+import pt.inevo.encontra.nbtree.NBTreeDescriptorList;
 import pt.inevo.encontra.nbtree.NBTree;
-import pt.inevo.encontra.nbtree.distances.DistancePointCalculator;
+import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.keys.Key;
 import pt.inevo.encontra.nbtree.keys.KeyMapper;
 import pt.inevo.encontra.nbtree.util.Util;
 
@@ -43,7 +45,7 @@ public class NBTreeTest {
             System.out.println("Testing the NBTree...");
 
             System.out.println("Creating the NBTree...");
-            NBTree nbTree = new NBTree();
+            NBTree<Key, NBTreeDescriptor> nbTree = new NBTree<Key, NBTreeDescriptor>();
             //NBTree nbTree = new NBTree("testSmallNBTree","nbtreeData");
 
             System.out.println("Creating the points to insert into the NBTree...");
@@ -69,26 +71,29 @@ public class NBTreeTest {
 
             System.out.println("Inserting the points in the nbtree");
             for (int i = 0; i < descriptors.length; i++) {
-                nbTree.insertPoint(new NBPoint(descriptors[i]));
+                NBTreeDescriptor descriptor = new NBTreeDescriptor(2, "Object" + i, new EuclideanDistanceMeasure());
+                descriptor.setValues(descriptors[i]);
+                nbTree.insertPoint(descriptor);
             }
             System.out.println("All the elements inserted in the nbtree\n");
 
             int k = 12;
-            NBPoint query = new NBPoint(descriptors[0]);
+            NBTreeDescriptor query = new NBTreeDescriptor(2, "Object0", new EuclideanDistanceMeasure());
+            query.setValues(descriptors[0]);
             System.out.println("Getting the " + k + " most similar to a given descriptor:");
 
             //testing the point A
             System.out.println("Descriptor used: " + Util.doubleArrayToString(descriptors[0], ','));
-            NBPointList results = nbTree.knnQuery(query, k);
+            NBTreeDescriptorList results = nbTree.knnQuery(query, k);
 
             System.out.println("Number of return elements: " + results.getSize());
             System.out.println("The most similar are: \n");
-            DistancePointCalculator distanceCalculator = nbTree.getDistanceCalculator();
-            KeyMapper keyMapper = nbTree.getPointMapper();
-            for (NBPoint point : results.getAllPoints()) {
-                double[] value = point.toArray();
+            DistanceMeasure distanceCalculator = nbTree.getDistanceMeasure();
+            KeyMapper keyMapper = nbTree.getKeyMapper();
+            for (NBTreeDescriptor point : results.getAllPoints()) {
+                double[] value = point.getDoubleRepresentation();
                 System.out.print(Util.doubleArrayToString(value, ','));
-                System.out.println(" - distance:" + distanceCalculator.getDistance(query, point) + "[key="
+                System.out.println(" - distance:" + distanceCalculator.distance(query, point) + "[key="
                         + keyMapper.getKey(point).getValue() + "]");
             }
 
@@ -97,10 +102,10 @@ public class NBTreeTest {
             results = nbTree.rangeQuery(query, 0.2);
             System.out.println("Number of returned results: " + results.getSize());
 
-            for (NBPoint point : results.getAllPoints()) {
-                double[] value = point.toArray();
+            for (NBTreeDescriptor point : results.getAllPoints()) {
+                double[] value = point.getDoubleRepresentation();
                 System.out.print(Util.doubleArrayToString(value, ','));
-                System.out.println(" - distance:" + distanceCalculator.getDistance(query, point) + "[key="
+                System.out.println(" - distance:" + distanceCalculator.distance(query, point) + "[key="
                         + keyMapper.getKey(point).getValue() + "]");
             }
 
