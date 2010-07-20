@@ -1,6 +1,6 @@
 package pt.inevo.encontra.nbtree.keys;
 
-import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 
 /**
  * Generic interface for building an object that knows how to calculate

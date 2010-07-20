@@ -9,7 +9,7 @@ import pt.inevo.encontra.common.distance.DistanceMeasure;
 import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.nbtree.NBTreeDescriptorList;
 import pt.inevo.encontra.nbtree.NBTree;
-import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.keys.KeyMapper;
 import pt.inevo.encontra.nbtree.util.Util;
 

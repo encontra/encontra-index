@@ -1,4 +1,4 @@
-package pt.inevo.encontra.nbtree;
+package pt.inevo.encontra.nbtree.descriptors;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -13,16 +13,20 @@ import pt.inevo.encontra.nbtree.util.Util;
  * @author ricardo
  */
 //public class NBTreeDescriptor<T extends Number> extends VectorDescriptor<T> {
-public class NBTreeDescriptor extends VectorDescriptor<Double> {
+public class NBTreeDescriptor<ID extends Serializable> extends VectorDescriptor<Serializable, Double> {
 
     protected Key key;
 
+    public NBTreeDescriptor(){
+        super(1, null);
+    }
+
     public NBTreeDescriptor(int size, DistanceMeasure measure) {
-        super(size, "");
+        super(size, null);
         super.distanceMeasure = measure;
     }
 
-    public NBTreeDescriptor(int size, String id, DistanceMeasure measure) {
+    public NBTreeDescriptor(int size, ID id, DistanceMeasure measure) {
         super(size);
         super.id = id;
         super.weights = new double[size];
@@ -60,7 +64,10 @@ public class NBTreeDescriptor extends VectorDescriptor<Double> {
 
     @Override
     public String getName() {
-        return id;
+        if (id != null){
+            return id.toString();
+        }
+        return "";
     }
 
     @Override
@@ -74,16 +81,16 @@ public class NBTreeDescriptor extends VectorDescriptor<Double> {
     }
 
     @Override
-    public void setId(Serializable id) {
-        super.id = id.toString();
-    }
-
-    @Override
     public Descriptor setStringRepresentation(String descriptor) {
         double [] values = Util.stringToDoubleArray(descriptor, ',');
         for (int i = 0; i < values.length; i++){
             super.set(i, values[i]);
         }
         return this;
+    }
+
+    @Override
+    public void setId(Serializable id) {
+        super.id = id;
     }
 }

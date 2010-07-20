@@ -7,7 +7,7 @@ import java.util.List;
 import pt.inevo.encontra.index.AbstractIndex;
 import pt.inevo.encontra.index.IndexEntry;
 import pt.inevo.encontra.nbtree.NBTree;
-import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.exceptions.NBTreeException;
 import pt.inevo.encontra.nbtree.keys.Key;
 import pt.inevo.encontra.query.Query.QueryType;

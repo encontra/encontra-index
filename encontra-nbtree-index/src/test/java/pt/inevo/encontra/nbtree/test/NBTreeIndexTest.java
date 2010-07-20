@@ -1,17 +1,17 @@
 package pt.inevo.encontra.nbtree.test;
 
-import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.descriptors.SimpleDescriptor;
-import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.Engine;
 import junit.framework.TestCase;
+import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.annotation.Indexed;
 import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptorExtractor;
 import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.storage.*;
 
@@ -71,66 +71,10 @@ public class NBTreeIndexTest extends TestCase {
         }
     }
 
-    public static class TestDescriptor extends SimpleDescriptor {
+    public static class TestNBTreeDescriptor extends NBTreeDescriptor {
 
-        public TestDescriptor(){
-            int i=0;
-        }
-
-        @Override
-        public double getDistance(Descriptor other) {
-            return getLevenshteinDistance(getValue(),(String)other.getValue());
-        }
-
-        public int getLevenshteinDistance (String s, String t) {
-            if (s == null || t == null) {
-                throw new IllegalArgumentException("Strings must not be null");
-            }
-
-            int n = s.length(); // length of s
-            int m = t.length(); // length of t
-
-            if (n == 0) {
-                return m;
-            } else if (m == 0) {
-                return n;
-            }
-
-            int p[] = new int[n+1]; //'previous' cost array, horizontally
-            int d[] = new int[n+1]; // cost array, horizontally
-            int _d[]; //placeholder to assist in swapping p and d
-
-            // indexes into strings s and t
-            int i; // iterates through s
-            int j; // iterates through t
-
-            char t_j; // jth character of t
-
-            int cost; // cost
-
-            for (i = 0; i<=n; i++) {
-                p[i] = i;
-            }
-
-            for (j = 1; j<=m; j++) {
-                t_j = t.charAt(j-1);
-                d[0] = j;
-
-                for (i=1; i<=n; i++) {
-                    cost = s.charAt(i-1)==t_j ? 0 : 1;
-                    // minimum of cell to the left+1, to the top+1, diagonally left and up +cost
-                    d[i] = Math.min(Math.min(d[i-1]+1, p[i]+1),  p[i-1]+cost);
-                }
-
-                // copy current distance counts to 'previous row' distance counts
-                _d = p;
-                p = d;
-                d = _d;
-            }
-
-            // our last action in the above loop was to switch d and p, so p now
-            // actually has the most recent cost counts
-            return p[n];
+        public TestNBTreeDescriptor(){
+            super.distanceMeasure = new EuclideanDistanceMeasure();
         }
     }
 
@@ -149,7 +93,7 @@ public class NBTreeIndexTest extends TestCase {
     }
 
     public void testMain() {
-        DescriptorExtractor descriptorExtractor=new SimpleDescriptorExtractor(TestDescriptor.class);
+        DescriptorExtractor descriptorExtractor=new NBTreeDescriptorExtractor(TestNBTreeDescriptor.class);
 
         EntityStorage storage=new SimpleObjectStorage(TestModel.class);
         System.out.println("Creating the Retrieval Engine...");
@@ -163,21 +107,19 @@ public class NBTreeIndexTest extends TestCase {
 
         SimpleSearcher titleSearcher=new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
-        titleSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
+        titleSearcher.setIndex(new SimpleIndex(TestNBTreeDescriptor.class));
 
         //TO DO -- we will be able to do this here
         //titleSearcher.setIndex(new NBTreeIndex(TestDescriptor.class));
 
-
         SimpleSearcher contentSearcher=new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
-        contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
+        contentSearcher.setIndex(new SimpleIndex(TestNBTreeDescriptor.class));
 
         searcher.add("title",titleSearcher);
         searcher.add("content",contentSearcher);
 
         e.setSearcher(searcher);
-
 
         System.out.println("Loading some objects to the test indexes");
         e.insert(new TestModel("aaa","bbb"));

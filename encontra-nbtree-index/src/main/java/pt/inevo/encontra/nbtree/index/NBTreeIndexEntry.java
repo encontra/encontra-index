@@ -1,7 +1,7 @@
 package pt.inevo.encontra.nbtree.index;
 
 import pt.inevo.encontra.index.IndexEntry;
-import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.keys.Key;
 
 public class NBTreeIndexEntry<K extends Key, V extends NBTreeDescriptor> implements IndexEntry<K,V> {

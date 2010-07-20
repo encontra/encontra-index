@@ -2,7 +2,7 @@ package pt.inevo.encontra.nbtree.keys;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import pt.inevo.encontra.nbtree.NBTreeDescriptor;
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.util.AeSimpleSHA1;
 import pt.inevo.encontra.nbtree.util.Util;
 

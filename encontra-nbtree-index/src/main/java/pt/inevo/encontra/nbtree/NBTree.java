@@ -1,5 +1,6 @@
 package pt.inevo.encontra.nbtree;
 
+import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import pt.inevo.encontra.nbtree.keys.Key;
 import jdbm.btree.BTree;
 import jdbm.RecordManager;
