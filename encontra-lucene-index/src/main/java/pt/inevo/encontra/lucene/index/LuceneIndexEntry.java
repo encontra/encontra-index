@@ -6,16 +6,17 @@ import pt.inevo.encontra.index.IndexEntry;
 
 
 public class LuceneIndexEntry implements IndexEntry<String,Document> {
+    private String key;
     private Document doc;
 
     @Override
     public String getKey() {
-        return doc.getField("IDENTIFIER").stringValue();
+        return key;
     }
 
     @Override
     public void setKey(String key) {
-        doc.add(new Field("IDENTIFIER", key, Field.Store.YES, Field.Index.NO));
+        this.key=key;
     }
 
     @Override
