@@ -119,7 +119,6 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
     public K insertPoint(V point) throws NBTreeException {
         K key = (K) keyMapper.getKey(point);
         //update key on point properties
-        //point.setKey(key);
         try {
             if (_tree.insert(key, point, false) != null) {
                 //when there is a collision, then associate a collection to the key
@@ -473,7 +472,7 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
 
                 HashSet<V> points = lookupPoints(((K) tuple.getKey()));
                 for (V p : points) {
-                    double[] value = p.getDoubleRepresentation();
+                    Double[] value = (Double[])p.getValues(Double.class).toArray(new Double[1]);
                     for (int i = 0; i < value.length; i++) {
                         System.out.println("   Val[" + i + "]: " + value[i]);
                     }

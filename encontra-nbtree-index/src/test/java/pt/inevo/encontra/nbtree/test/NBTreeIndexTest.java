@@ -1,5 +1,6 @@
 package pt.inevo.encontra.nbtree.test;
 
+import pt.inevo.encontra.common.distance.DistanceMeasure;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.Engine;
@@ -74,7 +75,28 @@ public class NBTreeIndexTest extends TestCase {
     public static class TestNBTreeDescriptor extends NBTreeDescriptor {
 
         public TestNBTreeDescriptor(){
+            super(Double.class);
             super.distanceMeasure = new EuclideanDistanceMeasure();
+        }
+
+        @Override
+        public String getName() {
+            return "TestNBTreeDescriptor";
+        }
+
+        @Override
+        public void setValue(Object o) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Object getValue() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public DistanceMeasure getDistanceMeasure() {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 

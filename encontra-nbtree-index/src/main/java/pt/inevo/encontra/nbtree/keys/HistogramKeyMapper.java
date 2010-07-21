@@ -18,7 +18,7 @@ public class HistogramKeyMapper implements KeyMapper<Key> {
         Key key;
         double val = 0;
         try {
-            double[] vec = point.getDoubleRepresentation();
+            Double[] vec = (Double[])(point.getValues(Double.class).toArray());
             for (int i = 0; i < vec.length; i++) {
                 val += (i + 1) * vec[i];
             }

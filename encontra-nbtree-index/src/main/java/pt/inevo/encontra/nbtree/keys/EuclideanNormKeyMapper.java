@@ -15,7 +15,7 @@ public class EuclideanNormKeyMapper implements KeyMapper<Key> {
     @Override
     public Key getKey(NBTreeDescriptor point) {
 
-        double [] p = point.getDoubleRepresentation();
+        Double [] p = (Double[])(point.getValues(Double.class).toArray(new Double[1]));
         double n = norm(p);
         String id = "";
         try {
@@ -29,7 +29,7 @@ public class EuclideanNormKeyMapper implements KeyMapper<Key> {
     }
 
     //calculate the norm of a vector
-    private double norm(double[] descriptor) {
+    private double norm(Double[] descriptor) {
         int i;
         double val = 0.0;
 

@@ -13,7 +13,7 @@ public class Util {
      * @param maxVal maximum value of the origin interval
      * @return a normalized vector
      */
-    public static double[] normalize(double[] descriptor, double minVal, double maxVal) {
+    public static Double[] normalize(Double[] descriptor, double minVal, double maxVal) {
         return normalize (descriptor, minVal, maxVal, 0, 1);
     }
 
@@ -26,11 +26,11 @@ public class Util {
      * @param maxValNorm maximum value of the destiny interval
      * @return a normalized vector
      */
-    public static double[] normalize(double[] descriptor, 
+    public static Double[] normalize(Double[] descriptor,
             double minVal, double maxVal,
             double minValNorm, double maxValNorm) {
 
-        double[] normalizedDescriptor = new double[descriptor.length];
+        Double[] normalizedDescriptor = new Double[descriptor.length];
 
         for (int i = 0; i < descriptor.length; i++) {
 
@@ -51,6 +51,18 @@ public class Util {
      * @return a double array represented as "val1,val2,...,valn"
      */
     public static String doubleArrayToString(double[] descriptor, char separator) {
+
+        String descriptorStr = "";
+        for (int i = 0; i < descriptor.length; i++) {
+            descriptorStr += descriptor[i];
+            if (i != (descriptor.length - 1)) {
+                descriptorStr += separator;
+            }
+        }
+        return descriptorStr;
+    }
+
+    public static String doubleArrayToString(Double[] descriptor, char separator) {
 
         String descriptorStr = "";
         for (int i = 0; i < descriptor.length; i++) {

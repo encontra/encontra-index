@@ -14,7 +14,7 @@ public class NBTreeDescriptorExtractor extends DescriptorExtractor<IndexedObject
         NBTreeDescriptor descriptor= newDescriptor();
 
         descriptor.setId(object.getId());
-        Object o = (Object)new double[]{object.getValue().hashCode()};
+        Object o = (Object)new Double[]{(double)object.getValue().hashCode()};
         descriptor.setValue(o);
         return descriptor;
     }
