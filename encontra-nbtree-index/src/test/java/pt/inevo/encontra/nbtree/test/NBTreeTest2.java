@@ -82,7 +82,7 @@ public class NBTreeTest2 {
 //            for (int i = 0; i < descriptors.length; i++) {
 //                NBTreeDescriptor descriptor = new NBTreeDescriptor(Double.class, descriptors[0].length, "Object" + i, new EuclideanDistanceMeasure());
 //                descriptor.setValues(descriptors[i]);
-//                nbTree.insertPoint(descriptor);
+//                nbTree.addEntry(descriptor);
 //            }
 //            System.out.println("All the elements inserted in the nbtree\n");
 //

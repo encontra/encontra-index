@@ -15,51 +15,35 @@ import java.io.*;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Random;
-import pt.inevo.encontra.common.distance.DistanceMeasure;
-import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 
 import pt.inevo.encontra.nbtree.exceptions.NBTreeException;
-import pt.inevo.encontra.nbtree.keys.EuclideanNormKeyMapper;
-import pt.inevo.encontra.nbtree.keys.KeyMapper;
+import pt.inevo.encontra.nbtree.index.NBTreeIndexEntry;
 import pt.inevo.encontra.nbtree.util.KeyComparator;
 
 /**
- * NBTree - Multidimensional indexing structure.
- * A java implementation of the structure developed by Manuel João da Fonseca.
- * @author Ricardo Dias
+ * A generic NBTree indexing structure.
+ * @author Ricardo
+ * @param <E>
  */
-public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serializable {
+public class NBTree<E extends NBTreeIndexEntry> implements Serializable {
 
     private static final long serialVersionUID = 8516386374296516305L;
     private RecordManager _recman;
     private BTree _tree;
     private CachePolicy _cache;
     private boolean hasChanged;
-    private KeyMapper keyMapper;
-    private DistanceMeasure distanceCalculator;
-
-    /**
-     * Constructs a new NBTree.
-     * Default BTree and RecordManager implementation will be used, as also the
-     * distance calculator and key mapper.
-     */
-    public NBTree() throws NBTreeException {
-        this(new EuclideanDistanceMeasure(), new EuclideanNormKeyMapper());
-    }
 
     /**
      * Constructs a new NBTree.
      * Default BTree and RecordManager implementation will be used
      */
-    public NBTree(DistanceMeasure distanceCalculator, KeyMapper mapper) throws NBTreeException {
+    public NBTree() throws NBTreeException {
         try {
             Random r = new Random();
             _cache = new SoftCache();
             _recman = new CacheRecordManager(RecordManagerFactory.createRecordManager("RM" + r.nextInt()), _cache);
             _tree = BTree.createInstance(_recman, new KeyComparator());
             hasChanged = true;
-            this.keyMapper = mapper;
-            this.distanceCalculator = distanceCalculator;
         } catch (IOException e) {
             throw new NBTreeException("Cannot instanciate a NBTree. Possible reason: " + e.toString());
         }
@@ -71,7 +55,7 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
      * If the NBTree already exists then it will be loaded into this instance.
      */
     public NBTree(String nbtreeName, String path) throws NBTreeException {
-        this(nbtreeName, path, new EuclideanDistanceMeasure(), new EuclideanNormKeyMapper(), new KeyComparator());
+        this(nbtreeName, path, new KeyComparator());
     }
 
     /**
@@ -79,8 +63,7 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
      * Default BTree and RecordManager implementation will be used.
      * If the NBTree already exists then it will be loaded into this instance.
      */
-    public NBTree(String nbtreeName, String path, DistanceMeasure distanceCalculator,
-            KeyMapper mapper, Comparator comparator) throws NBTreeException {
+    public NBTree(String nbtreeName, String path, Comparator comparator) throws NBTreeException {
         try {
             File directory = new File(path);
             if (!directory.exists()) {
@@ -103,8 +86,6 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
                 _recman.commit();
             }
             hasChanged = false;
-            this.keyMapper = mapper;
-            this.distanceCalculator = distanceCalculator;
         } catch (IOException e) {
             throw new NBTreeException("Cannot instanciate a NBTree. Possible reason: " + e.toString());
         }
@@ -116,31 +97,69 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
      * @return key that represents the inserted point and the point id
      * @throws NBTreeException
      */
-    public K insertPoint(V point) throws NBTreeException {
-        K key = (K) keyMapper.getKey(point);
-        //update key on point properties
+    public void addEntry(E entry) throws NBTreeException {
+
+        Key key = entry.getKey();
+        NBTreeDescriptor descriptor = entry.getValue();
         try {
-            if (_tree.insert(key, point, false) != null) {
+            if (_tree.insert(key, descriptor, false) != null) {
                 //when there is a collision, then associate a collection to the key
-                if (isPoint(key)) {
-                    HashSet<V> points = new HashSet<V>();
-                    V p = (V) _tree.find(key);
+                HashSet<NBTreeDescriptor> points = null;
+                if (isUnique(key)) {
+                    points = new HashSet<NBTreeDescriptor>();
+                    NBTreeDescriptor p = (NBTreeDescriptor) _tree.find(key);
                     points.add(p);
-                    points.add(point);
-                    //insert and replace the old value of the key with the new one
-                    _tree.insert(key, points, true);
+                    points.add(descriptor);
                 } else {
-                    HashSet<V> points = (HashSet<V>) _tree.find(key);
-                    points.add(point);
-                    //insert and replace the old value of the key with the new one
-                    _tree.insert(key, points, true);
+                    points = (HashSet<NBTreeDescriptor>) _tree.find(key);
+                    points.add(descriptor);
                 }
+                //insert and replace the old value of the key with the new one
+                _tree.insert(key, points, true);
             }
             hasChanged = true;
         } catch (Exception e) {
             throw new NBTreeException("Error: Could not insert the point. Possible reason: " + e.toString());
         }
-        return key;
+    }
+
+    /**
+     * Removes a point given the key and the point, because now handles multiple
+     * values with the same key.
+     * @param key
+     * @return a boolean that represents the success of the operation
+     */
+    public void removeEntry(E entry) throws NBTreeException {
+
+        Key key = entry.getKey();
+        NBTreeDescriptor descriptor = entry.getValue();
+        try {
+            if (isUnique(key)) {
+                _tree.remove(key);
+            } else {
+                //must remove only the point that is necessary - not the others
+                HashSet<NBTreeDescriptor> points = (HashSet<NBTreeDescriptor>) _tree.find(key);
+                NBTreeDescriptor toRemove = null;
+                if (points.size() > 1) {
+                    for (NBTreeDescriptor p : points) {
+                        if (descriptor.getId().equals(p.getId())) { //TO DO - check if this part here is correct
+                            toRemove = p;
+                            break;
+                        }
+                    }
+                    points.remove(toRemove);
+                    //update just to contain the non removed values
+                    _tree.insert(key, points, true);
+                } else {
+                    _tree.remove(key);
+                }
+            }
+
+            hasChanged = true;
+        } catch (Exception e) {
+            throw new NBTreeException("[Error]: Couldn't remove the point. Possible "
+                    + "reason: " + e.toString());
+        }
     }
 
     /**
@@ -149,7 +168,7 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
      * @return
      * @throws NBTreeException
      */
-    protected boolean isPoint(K key) throws NBTreeException {
+    private boolean isUnique(Key key) throws NBTreeException {
         if (key != null) {
             try {
                 Object o = _tree.find(key);
@@ -164,83 +183,19 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
     }
 
     /**
-     * Removes a point given the key and the point, because now handles multiple
-     * values with the same key.
-     * @param key
-     * @return a boolean that represents the success of the operation
-     */
-    public boolean removePoint(K key) {
-        try {
-            if (isPoint(key)) {
-                _tree.remove(key);
-            } else {
-                //must remove only the point that is necessary - not the others
-                HashSet<V> points = (HashSet<V>) _tree.find(key);
-                V toRemove = null;
-                if (points.size() > 1) {
-                    for (V p : points) {
-                        if (p.getKey().equals(key)) {
-                            toRemove = p;
-                            break;
-                        }
-                    }
-                    points.remove(toRemove);
-                    //update just to contain the non removed values
-                    _tree.insert(key, points, true);
-                } else {
-                    _tree.remove(key);
-                }
-            }
-
-            hasChanged = true;
-            return true;
-        } catch (Exception e) {
-            System.out.println("[Error]: Couldn't remove the point. Possible "
-                    + "reason: " + e.toString());
-            return false;
-        }
-    }
-
-    /**
-     * Gets a point given its key.
-     * @param key the key we want to find
-     * @return the point that matches the key
-     */
-    public V lookupPoint(K key) throws NBTreeException {
-        if (key != null) {
-            try {
-                if (isPoint(key)) {
-                    return (V) _tree.find(key);
-                } else {
-                    HashSet<V> points = (HashSet<V>) _tree.find(key);
-                    for (V p : points) {
-                        if (p.getKey().equals(key)) {
-                            return p;
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-                throw new NBTreeException(e.toString());
-            }
-        }
-        return null;
-    }
-
-    /**
      * Gets a list of points given its key.
      * @param key the key we want to find
      * @return the point that matches the key
      */
-    protected HashSet<V> lookupPoints(K key) throws NBTreeException {
+    private HashSet<NBTreeDescriptor> lookupPoints(Key key) throws NBTreeException {
         if (key != null) {
             try {
-                if (isPoint(key)) {
-                    HashSet<V> points = new HashSet<V>();
-                    points.add((V) _tree.find(key));
+                if (isUnique(key)) {
+                    HashSet<NBTreeDescriptor> points = new HashSet<NBTreeDescriptor>();
+                    points.add((NBTreeDescriptor) _tree.find(key));
                     return points;
                 } else {
-                    return (HashSet<V>) _tree.find(key);
+                    return (HashSet<NBTreeDescriptor>) _tree.find(key);
                 }
             } catch (Exception e) {
                 throw new NBTreeException(e.toString());
@@ -250,22 +205,32 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
     }
 
     /**
-     * Method that checks if the tree has the given key object
-     * @param tree
-     * @param key
+     * Method that checks if the tree has the given entry
+     * @param entry
      * @return
      * @throws NBTreeException
      */
-    public boolean hasPoint(K key) throws NBTreeException {
+    public boolean hasEntry(E entry) throws NBTreeException {
+
+        Key key = entry.getKey();
+        NBTreeDescriptor descriptor = entry.getValue();
         try {
-            if (_tree.find(key) != null) {
+            if (isUnique(entry.getKey())) {
                 return true;
             } else {
-                return false;
+                HashSet<NBTreeDescriptor> points = (HashSet<NBTreeDescriptor>) _tree.find(key);
+                if (points.size() > 1) {
+                    for (NBTreeDescriptor p : points) {
+                        if (descriptor.getId().equals(p.getId())) { //TO DO - check if this part here is correct
+                            return true;
+                        }
+                    }
+                }
             }
         } catch (IOException e) {
             throw new NBTreeException("Error: Could not complete the request. Possible reason: " + e.toString());
         }
+        return false;
     }
 
     /**
@@ -275,14 +240,14 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
      * @return a list with the most similar points
      * @throws NBTreeException
      */
-    public NBTreeDescriptorList knnQuery(V query, int knn) throws NBTreeException {
+    public NBTreeDescriptorList knnQuery(E query, int knn) throws NBTreeException {
 
         try {
             final double MAX_FAR = Double.MAX_VALUE;
             final double DELTA = 0.01;
             TupleBrowser lcursor, rcursor;
             Tuple tuple = new Tuple();
-            NBTreeDescriptorList results = new NBTreeDescriptorList(knn, query, distanceCalculator.getClass().newInstance());
+            NBTreeDescriptorList results = new NBTreeDescriptorList(knn, query.getValue(), query.getValue().getDistanceMeasure());
 
             double val;
             double rightLimit;
@@ -293,7 +258,7 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
             boolean getPrevious = false, getNext = false;
 
             farLimit = MAX_FAR;
-            val = getKeyMapper().getKey(query).getValue();
+            val = query.getKey().getValue();
             startPoint = val;
             rightLimit = startPoint + DELTA;
             leftLimit = startPoint - DELTA;
@@ -310,13 +275,13 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
                         rcursor.getPrevious(tuple);
                     }
                     if (rcursor.getNext(tuple)) {
-                        K searchKey = ((K) tuple.getKey());
+                        Key searchKey = ((Key) tuple.getKey());
                         double keyElem = searchKey.getValue();
-                        HashSet<V> points = lookupPoints(searchKey);
+                        HashSet<NBTreeDescriptor> points = lookupPoints(searchKey);
 
                         while (keyElem <= rightLimit && keepSearchRight) {
-                            for (V p : points) {
-                                val = getDistanceMeasure().distance(query, p);
+                            for (NBTreeDescriptor p : points) {
+                                val = query.getValue().getDistance(p);
                                 if (val <= farLimit) { //original version was just '<'
                                     if (!results.contains(p)) {	//insert only if it doesn't already exists
                                         if (!results.addPoint(p)) {
@@ -333,11 +298,11 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
                                 keepSearchRight = false;
                                 break;
                             }
-                            keyElem = ((K) tuple.getKey()).getValue();
-                            points = lookupPoints(((K) tuple.getKey()));
+                            keyElem = ((Key) tuple.getKey()).getValue();
+                            points = lookupPoints(((Key) tuple.getKey()));
                         }
                         if (keepSearchRight) {
-                            rightLimit = ((K) tuple.getKey()).getValue() + DELTA;
+                            rightLimit = ((Key) tuple.getKey()).getValue() + DELTA;
                             getPrevious = true;
                         } else {
                             rightLimit += DELTA;
@@ -358,13 +323,13 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
                         lcursor.getNext(tuple);
                     }
                     if (lcursor.getPrevious(tuple)) {
-                        K searchKey = ((K) tuple.getKey());
+                        Key searchKey = ((Key) tuple.getKey());
                         Double keyElem = searchKey.getValue();
-                        HashSet<V> points = lookupPoints(searchKey);
+                        HashSet<NBTreeDescriptor> points = lookupPoints(searchKey);
 
                         while (keyElem >= leftLimit && keepSearchLeft) {
-                            for (V p : points) {
-                                val = distanceCalculator.distance(query, p);
+                            for (NBTreeDescriptor p : points) {
+                                val = query.getValue().getDistance(p);
                                 if (val <= farLimit) { //original version is just '<'
                                     if (!results.contains(p)) {	//insert only if it doesn't already exists
                                         if (!results.addPoint(p)) {
@@ -381,11 +346,11 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
                                 keepSearchLeft = false;
                                 break;
                             }
-                            keyElem = ((K) tuple.getKey()).getValue();
-                            points = lookupPoints(((K) tuple.getKey()));
+                            keyElem = ((Key) tuple.getKey()).getValue();
+                            points = lookupPoints(((Key) tuple.getKey()));
                         }
                         if (keepSearchLeft) {
-                            leftLimit = ((K) tuple.getKey()).getValue() - DELTA;
+                            leftLimit = ((Key) tuple.getKey()).getValue() - DELTA;
                             getNext = true;
                         }
                     } else {
@@ -406,16 +371,16 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
      * @param bRadious the radious of the range query
      * @return
      */
-    public NBTreeDescriptorList rangeQuery(V query, double bRadious) throws NBTreeException {
+    public NBTreeDescriptorList rangeQuery(E query, double bRadious) throws NBTreeException {
 
         NBTreeDescriptorList results = null;
         try {
-            results = new NBTreeDescriptorList(Integer.MAX_VALUE, query, distanceCalculator.getClass().newInstance());
+            results = new NBTreeDescriptorList(Integer.MAX_VALUE, query.getValue(), query.getValue().getDistanceMeasure());
             TupleBrowser rcursor;
             Tuple tuple = new Tuple();
             double rightLimit, leftLimit, startPoint;
 
-            startPoint = getKeyMapper().getKey(query).getValue();
+            startPoint = query.getKey().getValue();
             leftLimit = startPoint - bRadious;
 
             if (leftLimit < 0) {
@@ -423,16 +388,15 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
             }
             rightLimit = startPoint + bRadious;
 
-
             //init the cursor just before the element at the leftLimit
             rcursor = _tree.browse(new Key(leftLimit, ""));
 
             //going from left to right with the cursor
             while (rcursor.getNext(tuple)) {
-                Double keyElem = ((K) tuple.getKey()).getValue();
+                Double keyElem = ((Key) tuple.getKey()).getValue();
                 if (keyElem <= rightLimit) {
-                    HashSet<V> points = lookupPoints(((K) tuple.getKey()));
-                    for (V p : points) {
+                    HashSet<NBTreeDescriptor> points = lookupPoints(((Key) tuple.getKey()));
+                    for (NBTreeDescriptor p : points) {
                         results.addPoint(p);
                     }
                 } else {
@@ -468,11 +432,11 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
         Tuple tuple = new Tuple();
         try {
             for (TupleBrowser cursor = _tree.browse(); cursor.getNext(tuple);) {
-                System.out.println("Key: " + ((K) tuple.getKey()).getValue());
+                System.out.println("Key: " + ((Key) tuple.getKey()).getValue());
 
-                HashSet<V> points = lookupPoints(((K) tuple.getKey()));
-                for (V p : points) {
-                    Double[] value = (Double[])p.getValues(Double.class).toArray(new Double[1]);
+                HashSet<NBTreeDescriptor> points = lookupPoints(((Key) tuple.getKey()));
+                for (NBTreeDescriptor p : points) {
+                    Double[] value = (Double[]) p.getValues(Double.class).toArray(new Double[1]);
                     for (int i = 0; i < value.length; i++) {
                         System.out.println("   Val[" + i + "]: " + value[i]);
                     }
@@ -482,21 +446,5 @@ public class NBTree<K extends Key, V extends NBTreeDescriptor> implements Serial
         } catch (Exception e) {
             throw new NBTreeException("Error: Cannot dump the NBTree. Possible reason: " + e.toString());
         }
-    }
-
-    /**
-     * Gets the Distance Calculator used by the NBTree
-     * @return the distanceCalculator
-     */
-    public DistanceMeasure getDistanceMeasure() {
-        return distanceCalculator;
-    }
-
-    /**
-     * Gets the Key Mapper used by the NBTree
-     * @return the keyMapper
-     */
-    public KeyMapper getKeyMapper() {
-        return keyMapper;
     }
 }

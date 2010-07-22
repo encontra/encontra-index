@@ -6,18 +6,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import pt.inevo.encontra.common.distance.DistanceMeasure;
 import pt.inevo.encontra.descriptors.VectorDescriptor;
-import pt.inevo.encontra.nbtree.keys.Key;
 
 /**
  * Represents a point to be inserted into the NBTree structure.
  * @author ricardo
  */
 public abstract class NBTreeDescriptor<ID extends Serializable, T extends Number> extends VectorDescriptor<ID, T> {
-
-    /**
-     * NBTreeDescriptor Key
-     */
-    protected Key key;
 
     public NBTreeDescriptor(Class<T> type){
         super(type, 1, "");
@@ -48,14 +42,6 @@ public abstract class NBTreeDescriptor<ID extends Serializable, T extends Number
     @Override
     public void setId(Serializable id) {
         super.id = id;
-    }
-
-    public Key getKey() {
-        return key;
-    }
-
-    public void setKey(Key key) {
-        this.key = key;
     }
 
     @Override
