@@ -1,4 +1,4 @@
-package pt.inevo.encontra.nbtree;
+package pt.inevo.encontra.btree;
 
 import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import java.util.Comparator;
@@ -6,6 +6,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import pt.inevo.encontra.common.distance.DistanceMeasure;
 import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
+import pt.inevo.encontra.descriptors.Descriptor;
 
 /**
  * Object that holds a list of NBTreeDescriptors. Used as the result of the KNN / Range Query.
@@ -14,9 +15,8 @@ import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 public class NBTreeDescriptorList {
 
     //internal representation of the NBTreeDescriptorList
-    private SortedSet<NBTreeDescriptor> sortedPoints;
-    private NBTreeDescriptor seedP;
-    private NBTreeDescriptor farPoint;
+    private SortedSet<Descriptor> sortedPoints;
+    private Descriptor seedP, farPoint;
     private double farDistance;
     private int size;
     /**
@@ -24,15 +24,15 @@ public class NBTreeDescriptorList {
      */
     private DistanceMeasure distanceCalculator;
 
-    protected NBTreeDescriptorList(int size, NBTreeDescriptor seedPoint, DistanceMeasure distancePointCalculator) {
+    public NBTreeDescriptorList(int size, Descriptor seedPoint, DistanceMeasure distancePointCalculator) {
         this.seedP = seedPoint;
         this.size = size;
         this.distanceCalculator = distancePointCalculator;
 
-        sortedPoints = new TreeSet<NBTreeDescriptor>(new Comparator<NBTreeDescriptor>() {
+        sortedPoints = new TreeSet<Descriptor>(new Comparator<Descriptor>() {
 
             @Override
-            public int compare(NBTreeDescriptor o1, NBTreeDescriptor o2) {
+            public int compare(Descriptor o1, Descriptor o2) {
                 try {
                     double dist1 = distanceCalculator.distance(seedP, o1);
                     double dist2 = distanceCalculator.distance(seedP, o2);
@@ -55,7 +55,7 @@ public class NBTreeDescriptorList {
      * Constructs a NBTreeDescriptorList with a specified default size.
      * @param size
      */
-    protected NBTreeDescriptorList(int size, NBTreeDescriptor seedPoint) {
+    public NBTreeDescriptorList(int size, NBTreeDescriptor seedPoint) {
         this(size, seedPoint, new EuclideanDistanceMeasure());
     }
 

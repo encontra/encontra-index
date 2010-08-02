@@ -1,10 +1,10 @@
 package pt.inevo.encontra.nbtree.index;
 
+import java.io.Serializable;
+import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.IndexEntry;
-import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
-import pt.inevo.encontra.nbtree.keys.Key;
 
-public class NBTreeIndexEntry<K extends Key, V extends NBTreeDescriptor> implements IndexEntry<K,V> {
+public class NBTreeIndexEntry<K extends Serializable, V extends Descriptor> implements IndexEntry<K,V> {
 
     protected K key;
     protected V value;
