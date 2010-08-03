@@ -40,7 +40,6 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
 
     @Override
     public E get(int idx) {
-        //TO DO - check if it is correct
         IndexEntry entry = index.find(idx);
         return (E) getEntryFactory().getObject(entry);
     }
@@ -55,7 +54,6 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
     public List<E> getAll() {
         ArrayList<E> entries = new ArrayList<E>();
         ITupleBrowser browser = index.browse();
-
 
         for(ITuple tuple = browser.getNext(); tuple != null; tuple = browser.getNext()){
             IndexEntry e = (IndexEntry) tuple.getEntry();

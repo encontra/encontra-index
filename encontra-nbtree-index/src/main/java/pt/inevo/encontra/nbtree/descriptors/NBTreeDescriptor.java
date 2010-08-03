@@ -1,9 +1,8 @@
 package pt.inevo.encontra.nbtree.descriptors;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.Collection;
 import pt.inevo.encontra.common.distance.DistanceMeasure;
 import pt.inevo.encontra.descriptors.VectorDescriptor;
 
@@ -11,7 +10,9 @@ import pt.inevo.encontra.descriptors.VectorDescriptor;
  * Represents a point to be inserted into the NBTree structure.
  * @author ricardo
  */
-public abstract class NBTreeDescriptor<ID extends Serializable, T extends Number> extends VectorDescriptor<ID, T> {
+public class NBTreeDescriptor<ID extends Serializable, T extends Number> extends VectorDescriptor<ID, T> {
+
+    private String name;
 
     public NBTreeDescriptor(Class<T> type){
         super(type, 1, "");
@@ -31,13 +32,23 @@ public abstract class NBTreeDescriptor<ID extends Serializable, T extends Number
     }
 
     @Override
-    public abstract String getName();
+    public String getName(){
+        return name;
+    }
+
+    public void setName(String name){
+        this.name = name;
+    }
 
     @Override
-    public abstract void setValue(Object o);
+    public void setValue(Object o){
+        setDoubleRepresentation((double[])o);
+    }
 
     @Override
-    public abstract Object getValue();
+    public Object getValue(){
+        return getDoubleRepresentation();
+    }
 
     @Override
     public void setId(Serializable id) {
@@ -45,7 +56,9 @@ public abstract class NBTreeDescriptor<ID extends Serializable, T extends Number
     }
 
     @Override
-    public abstract DistanceMeasure getDistanceMeasure();
+    public DistanceMeasure getDistanceMeasure(){
+        return distanceMeasure;
+    }
 
     public void setValues(T[] d) {
         for (int i = 0; i < d.length; i++){
@@ -54,11 +67,22 @@ public abstract class NBTreeDescriptor<ID extends Serializable, T extends Number
     }
 
     @Override
-    public Collection<T> getValues(Class<T> type) {
-        Collection<T> arrayValues = new ArrayList<T>();
-        for (int i = 0; i < size() ; i++){
-            arrayValues.add(get(i));
+    public double[] getDoubleRepresentation() {
+        int vectorSize = size();
+        double [] representation = new double[vectorSize];
+        for (int i = 0; i < vectorSize ; i++){
+            representation[i] = get(i).doubleValue();
         }
-        return arrayValues;
+        return representation;
+    }
+
+    @Override
+    public void setDoubleRepresentation(double[] v) {
+
+        this.size = v.length;
+        this.values = (T[])Array.newInstance(typeT,size);
+        for (int i = 0; i < values.length ; i++){
+            this.values[i] = (T) Double.valueOf(v[i]);
+        }
     }
 }

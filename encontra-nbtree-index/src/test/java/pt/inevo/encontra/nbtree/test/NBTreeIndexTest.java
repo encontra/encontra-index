@@ -119,6 +119,8 @@ public class NBTreeIndexTest extends TestCase {
         private String description;
         private BufferedImage image;
 
+        public ImageModel(){}
+
         public ImageModel(String filename, String description, BufferedImage image) {
             this.filename = filename;
             this.description = description;
@@ -427,7 +429,6 @@ public class NBTreeIndexTest extends TestCase {
         //A searcher for the image content
         SimpleImageSearcher imageSearcher = new SimpleImageSearcher();
         imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>(){});
-//        imageSearcher.setIndex(new SimpleIndex(ColorLayoutDescriptor.class));
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
 
         searcher.addSearcher("filename", filenameSearcher);
@@ -446,8 +447,6 @@ public class NBTreeIndexTest extends TestCase {
             BufferedImage image = ImageIO.read(new File("./src/test/resources/28004.jpg"));
 
             Query knnQuery = new KnnQuery(new IndexedObject<Serializable, BufferedImage>(null, image), 20);
-//            Query knnQuery = new KnnQuery(new IndexedObject(null, "aaa"), 8);
-
             System.out.println("Searching for elements in the engine...");
             ResultSet<ImageModel> results = e.search(knnQuery);
             

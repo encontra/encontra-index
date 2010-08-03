@@ -89,14 +89,18 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         ResultSet resultSet = new ResultSet<Descriptor>();
 
         IBTree tree = index.getBTree();
-        //        NBTreeDescriptor descriptor = (NBTreeDescriptor) d;
         //KNN search comes here
         final double MAX_FAR = Double.MAX_VALUE;
         final double DELTA = 0.01;
         ITupleBrowser lcursor;
         ITupleBrowser rcursor;
         ITuple tuple;
-        DescriptorList results = new DescriptorList(maxHits, d, new EuclideanDistanceMeasure());
+
+        double [] rep = d.getDoubleRepresentation();
+        NBTreeDescriptor desc = new NBTreeDescriptor(Double.class, rep.length, new EuclideanDistanceMeasure());
+        desc.setDoubleRepresentation(rep);
+
+        DescriptorList results = new DescriptorList(maxHits, desc, new EuclideanDistanceMeasure());
         double val;
         double rightLimit;
         double leftLimit;
@@ -108,10 +112,8 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         boolean getNext = false;
 
         farLimit = MAX_FAR;
-        //        val = descriptor.norm(2);
-
 //            val = origin.getDistance(d);
-        val = 0; //TO DO - must change this part here to the distance to the origin point
+        val = desc.norm(2); //TO DO - must change this part here to the distance to the origin point
 
         startPoint = val;
         rightLimit = startPoint + DELTA;
@@ -132,7 +134,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                     NBTreeDescriptor p = (NBTreeDescriptor) tuple.getEntry();
                     while (searchKey <= rightLimit && keepSearchRight) {
                         if (val <= farLimit) {
-                            val = d.getDistance(p);
+                            val = desc.getDistance(p);
                         }
                         if (val <= farLimit) {
                             //original version was just '<'
@@ -178,7 +180,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                     double searchKey = Double.parseDouble(tuple.getKey().toString());
                     NBTreeDescriptor p = (NBTreeDescriptor) tuple.getEntry();
                     while (searchKey >= leftLimit && keepSearchLeft) {
-                        val = d.getDistance(p);
+                        val = desc.getDistance(p);
                         if (val <= farLimit) {
                             //original version is just '<'
                             if (!results.contains(p)) {
@@ -208,9 +210,9 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                 }
             }
         }
-        for (Descriptor desc : results.getDescriptors()) {
-            Result<Descriptor> result = new Result<Descriptor>(desc);
-            result.setSimilarity(desc.getDistance(d)); // TODO - This is distance not similarity!!!
+        for (Descriptor descr : results.getDescriptors()) {
+            Result<Descriptor> result = new Result<Descriptor>(descr);
+            result.setSimilarity(descr.getDistance(desc)); // TODO - This is distance not similarity!!!
             resultSet.add(result);
         }
         //IS THIS NECESSARY

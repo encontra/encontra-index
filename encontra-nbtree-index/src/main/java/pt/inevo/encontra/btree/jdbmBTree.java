@@ -10,7 +10,7 @@ import jdbm.btree.BTree;
 import jdbm.helper.CachePolicy;
 import jdbm.helper.SoftCache;
 import jdbm.recman.CacheRecordManager;
-import pt.inevo.encontra.btree.comparators.DoubleComparator;
+import pt.inevo.encontra.btree.comparators.NumberComparator;
 import pt.inevo.encontra.index.IndexEntry;
 
 public class jdbmBTree<O extends IndexEntry> extends IBTree<O> {
@@ -33,7 +33,7 @@ public class jdbmBTree<O extends IndexEntry> extends IBTree<O> {
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
-            btree = BTree.createInstance(recman, new DoubleComparator());
+            btree = BTree.createInstance(recman, new NumberComparator());
             this.entryClass = entryClass;
         } catch (IOException ex) {
             ex.printStackTrace();
