@@ -2,8 +2,9 @@ package pt.inevo.encontra.btree;
 
 import java.io.Serializable;
 import jdbm.helper.Tuple;
+import pt.inevo.encontra.index.IndexEntry;
 
-public class jdbmTuple<K extends Serializable, V extends Serializable> implements ITuple<K,V> {
+public class jdbmTuple<O extends IndexEntry<? extends Serializable, ? extends Serializable>> implements ITuple<O> {
 
     private Tuple tuple;
 
@@ -12,22 +13,22 @@ public class jdbmTuple<K extends Serializable, V extends Serializable> implement
     }
 
     @Override
-    public K getKey() {
-        return (K)tuple.getKey();
+    public Serializable getKey() {
+        return (Serializable)tuple.getKey();
     }
 
     @Override
-    public V getValue() {
-        return (V)tuple.getValue();
+    public Serializable getEntry() {
+        return (Serializable)tuple.getValue();
     }
 
     @Override
-    public void setKey(K key) {
+    public void setKey(Serializable key) {
         tuple.setKey(key);
     }
 
     @Override
-    public void setValue(V value) {
+    public void setEntry(Serializable value) {
         tuple.setValue(value);
     }
 

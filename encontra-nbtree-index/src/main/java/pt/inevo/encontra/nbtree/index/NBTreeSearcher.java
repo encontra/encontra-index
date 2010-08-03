@@ -10,7 +10,7 @@ import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.index.search.Searcher;
-import pt.inevo.encontra.btree.NBTreeDescriptorList;
+import pt.inevo.encontra.btree.DescriptorList;
 import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
@@ -96,7 +96,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         ITupleBrowser lcursor;
         ITupleBrowser rcursor;
         ITuple tuple;
-        NBTreeDescriptorList results = new NBTreeDescriptorList(maxHits, d, new EuclideanDistanceMeasure());
+        DescriptorList results = new DescriptorList(maxHits, d, new EuclideanDistanceMeasure());
         double val;
         double rightLimit;
         double leftLimit;
@@ -129,7 +129,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                 tuple = rcursor.getNext();
                 if (tuple != null) {
                     double searchKey = Double.parseDouble(tuple.getKey().toString());
-                    NBTreeDescriptor p = (NBTreeDescriptor) tuple.getValue();
+                    NBTreeDescriptor p = (NBTreeDescriptor) tuple.getEntry();
                     while (searchKey <= rightLimit && keepSearchRight) {
                         if (val <= farLimit) {
                             val = d.getDistance(p);
@@ -138,7 +138,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                             //original version was just '<'
                             if (!results.contains(p)) {
                                 //insert only if it doesn't already exists
-                                if (!results.addPoint(p)) {
+                                if (!results.addDescriptor(p)) {
                                     /*we are not improving the results going
                                     this way, so stop the search this way*/
                                     keepSearchRight = false;
@@ -152,7 +152,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                             break;
                         }
                         searchKey = Double.parseDouble(tuple.getKey().toString());
-                        p = (NBTreeDescriptor) tuple.getValue();
+                        p = (NBTreeDescriptor) tuple.getEntry();
                     }
                     if (keepSearchRight) {
                         rightLimit = Double.parseDouble(tuple.getKey().toString()) + DELTA;
@@ -176,14 +176,14 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                 tuple = lcursor.getPrevious();
                 if (tuple != null) {
                     double searchKey = Double.parseDouble(tuple.getKey().toString());
-                    NBTreeDescriptor p = (NBTreeDescriptor) tuple.getValue();
+                    NBTreeDescriptor p = (NBTreeDescriptor) tuple.getEntry();
                     while (searchKey >= leftLimit && keepSearchLeft) {
                         val = d.getDistance(p);
                         if (val <= farLimit) {
                             //original version is just '<'
                             if (!results.contains(p)) {
                                 //insert only if it doesn't already exists
-                                if (!results.addPoint(p)) {
+                                if (!results.addDescriptor(p)) {
                                     /*we are not improving the results going
                                     this way, so stop the search this way*/
                                     keepSearchLeft = false;
@@ -197,7 +197,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                             break;
                         }
                         searchKey = Double.parseDouble(tuple.getKey().toString());
-                        p = (NBTreeDescriptor) tuple.getValue();
+                        p = (NBTreeDescriptor) tuple.getEntry();
                     }
                     if (keepSearchLeft) {
                         leftLimit = Double.parseDouble(tuple.getKey().toString()) - DELTA;
@@ -208,7 +208,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                 }
             }
         }
-        for (NBTreeDescriptor desc : results.getAllPoints()) {
+        for (Descriptor desc : results.getDescriptors()) {
             Result<Descriptor> result = new Result<Descriptor>(desc);
             result.setSimilarity(desc.getDistance(d)); // TODO - This is distance not similarity!!!
             resultSet.add(result);

@@ -1,7 +1,7 @@
 package pt.inevo.encontra.nbtree.util;
 
 /**
- * Util functions used by the NBTree.
+ * Util functions.
  * @author Ricardo Dias
  */
 public class Util {

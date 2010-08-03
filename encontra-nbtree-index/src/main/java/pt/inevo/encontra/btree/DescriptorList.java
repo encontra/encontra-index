@@ -1,5 +1,6 @@
 package pt.inevo.encontra.btree;
 
+import java.util.Iterator;
 import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import java.util.Comparator;
 import java.util.SortedSet;
@@ -9,12 +10,13 @@ import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.descriptors.Descriptor;
 
 /**
- * Object that holds a list of NBTreeDescriptors. Used as the result of the KNN / Range Query.
+ * Object that holds a list of Descriptors, as the result to a KNN query.
+ * Descriptors are ordered by the distance to the query provided.
  * @author Ricardo
  */
-public class NBTreeDescriptorList {
+public class DescriptorList implements Iterable<Descriptor> {
 
-    //internal representation of the NBTreeDescriptorList
+    //internal representation of the DescriptorList
     private SortedSet<Descriptor> sortedPoints;
     private Descriptor seedP, farPoint;
     private double farDistance;
@@ -24,7 +26,7 @@ public class NBTreeDescriptorList {
      */
     private DistanceMeasure distanceCalculator;
 
-    public NBTreeDescriptorList(int size, Descriptor seedPoint, DistanceMeasure distancePointCalculator) {
+    public DescriptorList(int size, Descriptor seedPoint, DistanceMeasure distancePointCalculator) {
         this.seedP = seedPoint;
         this.size = size;
         this.distanceCalculator = distancePointCalculator;
@@ -52,10 +54,10 @@ public class NBTreeDescriptorList {
     }
 
     /**
-     * Constructs a NBTreeDescriptorList with a specified default size.
+     * Constructs a DescriptorList with a specified default size.
      * @param size
      */
-    public NBTreeDescriptorList(int size, NBTreeDescriptor seedPoint) {
+    public DescriptorList(int size, NBTreeDescriptor seedPoint) {
         this(size, seedPoint, new EuclideanDistanceMeasure());
     }
 
@@ -63,7 +65,7 @@ public class NBTreeDescriptorList {
      * Add a NBPoint to the list.
      * @param point
      */
-    public boolean addPoint(NBTreeDescriptor point) {
+    public boolean addDescriptor(NBTreeDescriptor point) {
         try {
             if (sortedPoints.size() < size) {
                 sortedPoints.add(point);
@@ -93,7 +95,7 @@ public class NBTreeDescriptorList {
      * @param point
      * @return
      */
-    public boolean contains(NBTreeDescriptor point) {
+    public boolean contains(Descriptor point) {
         return sortedPoints.contains(point);
     }
 
@@ -101,7 +103,7 @@ public class NBTreeDescriptorList {
      * Remove a point from the list.
      * @param point
      */
-    public void removePoint(NBTreeDescriptor point) {
+    public void removeDescriptor(NBTreeDescriptor point) {
         if (sortedPoints.contains(point)) {
             sortedPoints.remove(point);
             if (sortedPoints.size() > 0) {
@@ -123,8 +125,17 @@ public class NBTreeDescriptorList {
      * Retrieved all the points from the list.
      * @return
      */
-    public NBTreeDescriptor[] getAllPoints() {
-        return sortedPoints.toArray(new NBTreeDescriptor[1]);
+    public Descriptor[] getDescriptors() {
+        return sortedPoints.toArray(new Descriptor[1]);
+    }
+
+    /**
+     * Gets the iterator object for this list.
+     * @return
+     */
+    @Override
+    public Iterator<Descriptor> iterator() {
+        return sortedPoints.iterator();
     }
 
     /**

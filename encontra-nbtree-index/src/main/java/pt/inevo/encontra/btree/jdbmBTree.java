@@ -13,37 +13,40 @@ import jdbm.recman.CacheRecordManager;
 import pt.inevo.encontra.btree.comparators.DoubleComparator;
 import pt.inevo.encontra.index.IndexEntry;
 
-public class jdbmBTree<O extends IndexEntry<? extends Serializable, ? extends Serializable>> extends IBTree<O> {
+public class jdbmBTree<O extends IndexEntry> extends IBTree<O> {
 
     private RecordManager recman;
     private BTree btree;
     private CachePolicy cache;
+    private Class entryClass;
 
-    public jdbmBTree() {
-        this("RM" + new Random().nextInt());
+    public jdbmBTree(Class entryClass) {
+        this("RM" + new Random().nextInt(), entryClass);
     }
 
     /**
      * Uses a default Double Comparator
      * @param path
      */
-    public jdbmBTree(String path) {
+    public jdbmBTree(String path, Class entryClass) {
         super(path);
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
             btree = BTree.createInstance(recman, new DoubleComparator());
+            this.entryClass = entryClass;
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
     //must specify a comparator for the objects
-    public jdbmBTree(String path, Comparator comparator) {
+    public jdbmBTree(String path, Class entryClass, Comparator comparator) {
         super(path);
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
+            this.entryClass = entryClass;
 
             long recid = recman.getNamedObject(path);
             if (recid != 0) { //reload the btree
@@ -105,12 +108,19 @@ public class jdbmBTree<O extends IndexEntry<? extends Serializable, ? extends Se
     }
 
     @Override
-    public Object find(Serializable key) {
+    public O find(Serializable key) {
         try {
             Object result = btree.find(key);
             if (result != null) {
-                return result;
+                O entry = (O) entryClass.newInstance();
+                entry.setKey(key);
+                entry.setValue((Serializable)result);
+                return entry;
             }
+        } catch (InstantiationException ex) {
+            ex.printStackTrace();
+        } catch (IllegalAccessException ex) {
+            ex.printStackTrace();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -118,7 +128,7 @@ public class jdbmBTree<O extends IndexEntry<? extends Serializable, ? extends Se
     }
 
     @Override
-    public ITupleBrowser browse() {
+    public ITupleBrowser<O> browse() {
         try {
             return new jdbmTupleBrowser(btree.browse());
         } catch (IOException ex) {
@@ -128,7 +138,7 @@ public class jdbmBTree<O extends IndexEntry<? extends Serializable, ? extends Se
     }
 
     @Override
-    public ITupleBrowser browse(Serializable key) {
+    public ITupleBrowser<O> browse(Serializable key) {
         try {
             return new jdbmTupleBrowser(btree.browse(key));
         } catch (IOException ex) {

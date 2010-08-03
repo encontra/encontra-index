@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import jdbm.helper.Tuple;
 import jdbm.helper.TupleBrowser;
+import pt.inevo.encontra.index.IndexEntry;
 
-public class jdbmTupleBrowser<K extends Serializable, V extends Serializable> implements ITupleBrowser<K,V> {
+public class jdbmTupleBrowser<O extends IndexEntry<? extends Serializable, ? extends Serializable>> implements ITupleBrowser<O> {
 
     private TupleBrowser browser;
 
@@ -14,11 +15,11 @@ public class jdbmTupleBrowser<K extends Serializable, V extends Serializable> im
     }
 
     @Override
-    public ITuple<K, V> getNext() {
+    public ITuple<O> getNext() {
         try {
             Tuple tuple = new Tuple();
             if (browser.getNext(tuple)) {
-                ITuple<K, V> t = new jdbmTuple<K, V>(tuple);
+                ITuple<O> t = new jdbmTuple<O>(tuple);
                 return t;
             }
         } catch (IOException ex) {
@@ -28,11 +29,11 @@ public class jdbmTupleBrowser<K extends Serializable, V extends Serializable> im
     }
 
     @Override
-    public ITuple<K, V> getPrevious() {
+    public ITuple<O> getPrevious() {
         try {
             Tuple tuple = new Tuple();
             if (browser.getPrevious(tuple)) {
-                ITuple<K, V> t = new jdbmTuple<K, V>(tuple);
+                ITuple<O> t = new jdbmTuple<O>(tuple);
                 return t;
             }
         } catch (IOException ex) {

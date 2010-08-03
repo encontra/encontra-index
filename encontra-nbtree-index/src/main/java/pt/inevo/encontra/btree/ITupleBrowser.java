@@ -1,16 +1,17 @@
 package pt.inevo.encontra.btree;
 
 import java.io.Serializable;
+import pt.inevo.encontra.index.IndexEntry;
 
-public interface ITupleBrowser<K extends Serializable, V extends Serializable> {
-
-    /**
-     * @return the tuple or null if it doesn't exist
-     */
-    public ITuple<K,V> getNext();
+public interface ITupleBrowser<O extends IndexEntry> {
 
     /**
      * @return the tuple or null if it doesn't exist
      */
-    public ITuple<K,V> getPrevious();
+    public ITuple<O> getNext();
+
+    /**
+     * @return the tuple or null if it doesn't exist
+     */
+    public ITuple<O> getPrevious();
 }

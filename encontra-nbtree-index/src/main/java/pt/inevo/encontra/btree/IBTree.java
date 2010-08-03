@@ -61,18 +61,18 @@ public abstract class IBTree<O extends IndexEntry> {
      * @param key
      * @return
      */
-    public abstract Object find(Serializable key);
+    public abstract O find(Serializable key);
 
     /**
      * Get a browser initially positioned at the beginning of the IBTree.
      * @return
      */
-    public abstract ITupleBrowser browse();
+    public abstract ITupleBrowser<O> browse();
 
     /**
      * Get a browser initially positioned just before the given key.
      * @param key
      * @return
      */
-    public abstract ITupleBrowser browse(Serializable key);
+    public abstract ITupleBrowser<O> browse(Serializable key);
 }

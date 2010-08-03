@@ -9,7 +9,6 @@ import pt.inevo.encontra.btree.IBTree;
 import pt.inevo.encontra.btree.ITuple;
 import pt.inevo.encontra.btree.ITupleBrowser;
 import pt.inevo.encontra.btree.jdbmBTree;
-import pt.inevo.encontra.index.IndexEntry;
 
 /**
  * Testing the jdbmBTree with the IBTree interface.
@@ -36,41 +35,10 @@ public class BTreeTest {
     public void tearDown() {
     }
 
-    public class EntityTestObject implements IndexEntry<Double, String> {
-
-        private Double key;
-        private String description;
-
-        public EntityTestObject(Double key, String desc){
-            this.key = key;
-            this.description = desc;
-        }
-
-        @Override
-        public Double getKey() {
-            return key;
-        }
-
-        @Override
-        public void setKey(Double key) {
-            this.key = key;
-        }
-
-        @Override
-        public String getValue() {
-            return description;
-        }
-
-        @Override
-        public void setValue(String o) {
-            this.description = o;
-        }
-    }
-
     @Test
     public void test() {
         System.out.println("Testing the jdbmBTree...");
-        IBTree<EntityTestObject> btree = new jdbmBTree<EntityTestObject>();
+        IBTree<EntityTestObject> btree = new jdbmBTree<EntityTestObject>(EntityTestObject.class);
 
         System.out.println("Adding some elements to the BTree");
         for (double i = 0; i < 10; i++) {
@@ -84,11 +52,11 @@ public class BTreeTest {
         boolean exists = btree.hasEntry(new EntityTestObject(3d, "Description of object 3"));
         System.out.println("Getting an element from the BTree... : " + exists);
 
-        String o = (String) btree.find(3d);
-        if (o != null) System.out.println("Object with id 3 retrieved.");
+        EntityTestObject o = btree.find(3d);
+        if (o != null) System.out.println("Object with id 3 retrieved." + o.getValue());
 
-        String o2 = (String) btree.find(12d);
-        if (o2 != null) System.out.println("Object with id 3 retrieved.");
+        EntityTestObject o2 = btree.find(12d);
+        if (o2 != null) System.out.println("Object with id 12 retrieved.");
         else System.out.println("[Error]: object with id 12 doesn't not exist in the BTree.");
 
         boolean value = btree.remove(new EntityTestObject(3d, "Description of object 3"));
@@ -107,7 +75,7 @@ public class BTreeTest {
         System.out.println("Iterating over all the entries...");
         tuple = browser.getNext();
         while (tuple != null) {
-            System.out.println("Key: " + tuple.getKey() + ", Value: " + tuple.getValue());
+            System.out.println("Key: " + tuple.getKey() + ", Value: " + tuple.getEntry());
             tuple = browser.getNext();
         }
 
@@ -115,7 +83,7 @@ public class BTreeTest {
         System.out.println("Iterating through some entries (next)...");
         tuple = browser.getNext();
         while (tuple != null) {
-            System.out.println("Key: " + tuple.getKey() + ", Value: " + tuple.getValue());
+            System.out.println("Key: " + tuple.getKey() + ", Value: " + tuple.getEntry());
             tuple = browser.getNext();
         }
 
@@ -123,7 +91,7 @@ public class BTreeTest {
         System.out.println("Iterating through some entries (previous)...");
         tuple = browser.getPrevious();
         while (tuple != null) {
-            System.out.println("Key: " + tuple.getKey() + ", Value: " + tuple.getValue());
+            System.out.println("Key: " + tuple.getKey() + ", Value: " + tuple.getEntry());
             tuple = browser.getPrevious();
         }
 
