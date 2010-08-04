@@ -12,12 +12,10 @@ import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.Engine;
 import junit.framework.TestCase;
 import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
 import pt.inevo.encontra.index.*;
-import pt.inevo.encontra.index.annotation.Indexed;
 import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.nbtree.index.BTreeIndex;
@@ -109,68 +107,6 @@ public class NBTreeIndexTest extends TestCase {
          */
         public void setPixels(int[] pixels) {
             this.pixels = pixels;
-        }
-    }
-
-    public class ImageModel implements IEntity<Long> {
-
-        private Long id;
-        private String filename;
-        private String description;
-        private BufferedImage image;
-
-        public ImageModel(){}
-
-        public ImageModel(String filename, String description, BufferedImage image) {
-            this.filename = filename;
-            this.description = description;
-            this.image = image;
-        }
-
-        @Override
-        public Long getId() {
-            return id;
-        }
-
-        @Override
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        @Indexed
-        public String getFilename() {
-            return filename;
-        }
-
-        public void setFilename(String filename) {
-            this.filename = filename;
-        }
-
-        @Indexed
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        @Indexed
-        public BufferedImage getImage() {
-            return image;
-        }
-
-        public void setImage(BufferedImage image) {
-            this.image = image;
-        }
-
-        @Override
-        public String toString() {
-            return "TestModel{"
-                    + "id=" + id
-                    + ", title='" + filename + '\''
-                    + ", content='" + description + '\''
-                    + '}';
         }
     }
 
@@ -274,74 +210,6 @@ public class NBTreeIndexTest extends TestCase {
         }
     }
 
-    public static class StringDescriptor extends SimpleDescriptor {
-
-        public StringDescriptor() {
-            super();
-        }
-
-        @Override
-        public String getName() {
-            return "StringDescriptor";
-        }
-
-        @Override
-        public double getDistance(Descriptor other) {
-            return getLevenshteinDistance(getValue(), (String) other.getValue());
-        }
-
-        public int getLevenshteinDistance(String s, String t) {
-            if (s == null || t == null) {
-                throw new IllegalArgumentException("Strings must not be null");
-            }
-
-            int n = s.length(); // length of s
-            int m = t.length(); // length of t
-
-            if (n == 0) {
-                return m;
-            } else if (m == 0) {
-                return n;
-            }
-
-            int p[] = new int[n + 1]; //'previous' cost array, horizontally
-            int d[] = new int[n + 1]; // cost array, horizontally
-            int _d[]; //placeholder to assist in swapping p and d
-
-            // indexes into strings s and t
-            int i; // iterates through s
-            int j; // iterates through t
-
-            char t_j; // jth character of t
-
-            int cost; // cost
-
-            for (i = 0; i <= n; i++) {
-                p[i] = i;
-            }
-
-            for (j = 1; j <= m; j++) {
-                t_j = t.charAt(j - 1);
-                d[0] = j;
-
-                for (i = 1; i <= n; i++) {
-                    cost = s.charAt(i - 1) == t_j ? 0 : 1;
-                    // minimum of cell to the left+1, to the top+1, diagonally left and up +cost
-                    d[i] = Math.min(Math.min(d[i - 1] + 1, p[i] + 1), p[i - 1] + cost);
-                }
-
-                // copy current distance counts to 'previous row' distance counts
-                _d = p;
-                p = d;
-                d = _d;
-            }
-
-            // our last action in the above loop was to switch d and p, so p now
-            // actually has the most recent cost counts
-            return p[n];
-        }
-    }
-
     public class SimpleImageSearcher<O extends IndexedObject> extends NBTreeSearcher<O> {
 
         @Override
@@ -397,10 +265,6 @@ public class NBTreeIndexTest extends TestCase {
     }
 
     public void testMain() {
-        //loading a bunch of images from the hard drive
-        ImageModelLoader loader = new ImageModelLoader();
-        List<ImageModel> images = loader.getImages("./src/test/resources/additional_images");
-
         //Creating the EntityStorage for saving the objects
         EntityStorage storage = new SimpleObjectStorage(ImageModel.class);
 
@@ -428,7 +292,7 @@ public class NBTreeIndexTest extends TestCase {
 
         //A searcher for the image content
         SimpleImageSearcher imageSearcher = new SimpleImageSearcher();
-        imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>(){});
+        imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>("IndexedObject"));
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
 
         searcher.addSearcher("filename", filenameSearcher);
@@ -437,7 +301,9 @@ public class NBTreeIndexTest extends TestCase {
 
         e.setSearcher(searcher);
 
-        System.out.println("Loading some objects to the test indexes");
+        System.out.println("Loading some objects to the test indexes...");
+        ImageModelLoader loader = new ImageModelLoader();
+        List<ImageModel> images = loader.getImages("./src/test/resources/additional_images");
         for (ImageModel im : images) {
             e.insert(im);
         }

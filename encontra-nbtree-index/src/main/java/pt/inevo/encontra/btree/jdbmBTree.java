@@ -13,12 +13,13 @@ import jdbm.recman.CacheRecordManager;
 import pt.inevo.encontra.btree.comparators.NumberComparator;
 import pt.inevo.encontra.index.IndexEntry;
 
-public class jdbmBTree<O extends IndexEntry> extends IBTree<O> {
+public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
 
     private RecordManager recman;
     private BTree btree;
     private CachePolicy cache;
     private Class entryClass;
+    private String path;
 
     public jdbmBTree(Class entryClass) {
         this("RM" + new Random().nextInt(), entryClass);
@@ -29,7 +30,7 @@ public class jdbmBTree<O extends IndexEntry> extends IBTree<O> {
      * @param path
      */
     public jdbmBTree(String path, Class entryClass) {
-        super(path);
+        this.path = path;
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
@@ -42,7 +43,7 @@ public class jdbmBTree<O extends IndexEntry> extends IBTree<O> {
 
     //must specify a comparator for the objects
     public jdbmBTree(String path, Class entryClass, Comparator comparator) {
-        super(path);
+        this.path = path;
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);

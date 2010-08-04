@@ -1,7 +1,6 @@
 package pt.inevo.encontra.btree;
 
 import java.util.Iterator;
-import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -36,8 +35,8 @@ public class DescriptorList implements Iterable<Descriptor> {
             @Override
             public int compare(Descriptor o1, Descriptor o2) {
                 try {
-                    double dist1 = distanceCalculator.distance(seedP, o1);
-                    double dist2 = distanceCalculator.distance(seedP, o2);
+                    double dist1 = seedP.getDistance(o1);
+                    double dist2 = seedP.getDistance(o2);
                     if (o1.equals(o2)) {
                         return 0;
                     }
@@ -57,7 +56,7 @@ public class DescriptorList implements Iterable<Descriptor> {
      * Constructs a DescriptorList with a specified default size.
      * @param size
      */
-    public DescriptorList(int size, NBTreeDescriptor seedPoint) {
+    public DescriptorList(int size, Descriptor seedPoint) {
         this(size, seedPoint, new EuclideanDistanceMeasure());
     }
 
@@ -65,22 +64,22 @@ public class DescriptorList implements Iterable<Descriptor> {
      * Add a NBPoint to the list.
      * @param point
      */
-    public boolean addDescriptor(NBTreeDescriptor point) {
+    public boolean addDescriptor(Descriptor point) {
         try {
             if (sortedPoints.size() < size) {
                 sortedPoints.add(point);
                 farPoint = sortedPoints.last();
-                farDistance = distanceCalculator.distance(seedP, farPoint);
+                farDistance = seedP.getDistance(farPoint);
                 return true;
             } else {
-                double distance = distanceCalculator.distance(seedP, point);
+                double distance = seedP.getDistance(point);
                 if (distance > farDistance) {
                     return false;
                 } else {
                     sortedPoints.remove(farPoint);
                     sortedPoints.add(point);
                     farPoint = sortedPoints.last();
-                    farDistance = distanceCalculator.distance(seedP, farPoint);
+                    farDistance = seedP.getDistance(farPoint);
                     return true;
                 }
             }
@@ -103,13 +102,13 @@ public class DescriptorList implements Iterable<Descriptor> {
      * Remove a point from the list.
      * @param point
      */
-    public void removeDescriptor(NBTreeDescriptor point) {
+    public void removeDescriptor(Descriptor point) {
         if (sortedPoints.contains(point)) {
             sortedPoints.remove(point);
             if (sortedPoints.size() > 0) {
                 farPoint = sortedPoints.last();
                 try {
-                    farDistance = distanceCalculator.distance(seedP, farPoint);
+                    farDistance = seedP.getDistance(farPoint);
                 } catch (Exception ex) {
                     System.out.println("[Error]: Problem when calculating the "
                             + "distance between points. Possible reason: " + ex.toString());

@@ -1,17 +1,16 @@
 package pt.inevo.encontra.nbtree.index;
 
-import pt.inevo.encontra.btree.IBTree;
+import pt.inevo.encontra.btree.DescriptorList;
 import pt.inevo.encontra.btree.ITuple;
 import pt.inevo.encontra.btree.ITupleBrowser;
-import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.index.search.Searcher;
-import pt.inevo.encontra.btree.DescriptorList;
-import pt.inevo.encontra.nbtree.descriptors.NBTreeDescriptor;
+import pt.inevo.encontra.btree.IBTree;
+import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.Query.QueryType;
@@ -89,16 +88,14 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         ResultSet resultSet = new ResultSet<Descriptor>();
 
         IBTree tree = index.getBTree();
-        //KNN search comes here
         final double MAX_FAR = Double.MAX_VALUE;
         final double DELTA = 0.01;
         ITupleBrowser lcursor;
         ITupleBrowser rcursor;
         ITuple tuple;
 
-        double [] rep = d.getDoubleRepresentation();
-        NBTreeDescriptor desc = new NBTreeDescriptor(Double.class, rep.length, new EuclideanDistanceMeasure());
-        desc.setDoubleRepresentation(rep);
+        NBTreeIndexEntry iEntry = (NBTreeIndexEntry)index.getEntryFactory().createIndexEntry(d);
+        Descriptor desc = iEntry.getValue();
 
         DescriptorList results = new DescriptorList(maxHits, desc, new EuclideanDistanceMeasure());
         double val;
@@ -112,8 +109,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         boolean getNext = false;
 
         farLimit = MAX_FAR;
-//            val = origin.getDistance(d);
-        val = desc.norm(2); //TO DO - must change this part here to the distance to the origin point
+        val = Double.parseDouble(iEntry.getKey().toString());
 
         startPoint = val;
         rightLimit = startPoint + DELTA;
@@ -131,7 +127,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                 tuple = rcursor.getNext();
                 if (tuple != null) {
                     double searchKey = Double.parseDouble(tuple.getKey().toString());
-                    NBTreeDescriptor p = (NBTreeDescriptor) tuple.getEntry();
+                    Descriptor p = (Descriptor) tuple.getEntry();
                     while (searchKey <= rightLimit && keepSearchRight) {
                         if (val <= farLimit) {
                             val = desc.getDistance(p);
@@ -154,7 +150,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                             break;
                         }
                         searchKey = Double.parseDouble(tuple.getKey().toString());
-                        p = (NBTreeDescriptor) tuple.getEntry();
+                        p = (Descriptor) tuple.getEntry();
                     }
                     if (keepSearchRight) {
                         rightLimit = Double.parseDouble(tuple.getKey().toString()) + DELTA;
@@ -178,7 +174,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                 tuple = lcursor.getPrevious();
                 if (tuple != null) {
                     double searchKey = Double.parseDouble(tuple.getKey().toString());
-                    NBTreeDescriptor p = (NBTreeDescriptor) tuple.getEntry();
+                    Descriptor p = (Descriptor) tuple.getEntry();
                     while (searchKey >= leftLimit && keepSearchLeft) {
                         val = desc.getDistance(p);
                         if (val <= farLimit) {
@@ -199,7 +195,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
                             break;
                         }
                         searchKey = Double.parseDouble(tuple.getKey().toString());
-                        p = (NBTreeDescriptor) tuple.getEntry();
+                        p = (Descriptor) tuple.getEntry();
                     }
                     if (keepSearchLeft) {
                         leftLimit = Double.parseDouble(tuple.getKey().toString()) - DELTA;

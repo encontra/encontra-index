@@ -12,7 +12,7 @@ import pt.inevo.encontra.index.IndexEntry;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
-public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
+public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
 
     protected IBTree index;
 
@@ -39,8 +39,8 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
     }
 
     @Override
-    public E get(int idx) {
-        IndexEntry entry = index.find(idx);
+    public E get(int key) {
+        IndexEntry entry = index.find(key);
         return (E) getEntryFactory().getObject(entry);
     }
 
