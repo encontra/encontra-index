@@ -218,7 +218,7 @@ public class NBTreeTest2 {
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
 
-        //A searcher for the image content
+        //A searcher for the image content - using a simple descriptor
         SimpleImageSearcher imageSearcher = new SimpleImageSearcher();
         imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor());
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));

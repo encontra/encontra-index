@@ -11,10 +11,13 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.Engine;
 import junit.framework.TestCase;
+import pt.inevo.encontra.descriptors.CompositeDescriptor;
+import pt.inevo.encontra.descriptors.CompositeDescriptorExtractor;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
+import pt.inevo.encontra.image.descriptors.ScalableColorDescriptor;
 import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
@@ -290,10 +293,16 @@ public class NBTreeIndexTest extends TestCase {
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
 
-        //A searcher for the image content
+//        CompositeDescriptorExtractor compositeImageDescriptorExtractor = new CompositeDescriptorExtractor(IndexedObject.class, null);
+//        compositeImageDescriptorExtractor.addExtractor(new ColorLayoutDescriptor<IndexedObject>(), 1);
+//        compositeImageDescriptorExtractor.addExtractor(new ScalableColorDescriptor(), 1);
+
+        //A searcher for the image content (using only one type of descriptor
         SimpleImageSearcher imageSearcher = new SimpleImageSearcher();
         imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>());
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
+//        imageSearcher.setDescriptorExtractor(compositeImageDescriptorExtractor);
+//        imageSearcher.setIndex(new BTreeIndex(CompositeDescriptor.class));
 
         searcher.addSearcher("filename", filenameSearcher);
         searcher.addSearcher("description", descriptionSearcher);

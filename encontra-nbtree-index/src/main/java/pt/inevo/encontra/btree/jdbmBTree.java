@@ -13,13 +13,11 @@ import jdbm.recman.CacheRecordManager;
 import pt.inevo.encontra.btree.comparators.NumberComparator;
 import pt.inevo.encontra.index.IndexEntry;
 
-public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
+public class jdbmBTree<O extends IndexEntry & Serializable> implements IBTree<O> {
 
     private RecordManager recman;
     private BTree btree;
     private CachePolicy cache;
-    private Class entryClass;
-    private String path;
 
     public jdbmBTree(Class entryClass) {
         this("RM" + new Random().nextInt(), entryClass);
@@ -30,12 +28,10 @@ public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
      * @param path
      */
     public jdbmBTree(String path, Class entryClass) {
-        this.path = path;
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
             btree = BTree.createInstance(recman, new NumberComparator());
-            this.entryClass = entryClass;
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -43,11 +39,9 @@ public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
 
     //must specify a comparator for the objects
     public jdbmBTree(String path, Class entryClass, Comparator comparator) {
-        this.path = path;
         try {
             cache = new SoftCache();
             recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
-            this.entryClass = entryClass;
 
             long recid = recman.getNamedObject(path);
             if (recid != 0) { //reload the btree
@@ -88,6 +82,7 @@ public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
         try {
             if (btree.find(entry.getKey()) != null) {
                 btree.remove(entry.getKey());
+                recman.commit();
             } else return false;
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -114,15 +109,8 @@ public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
         try {
             Object result = btree.find(key);
             if (result != null) {
-                O entry = (O) entryClass.newInstance();
-                entry.setKey(key);
-                entry.setValue((Serializable)result);
-                return entry;
+                return (O)result;
             }
-        } catch (InstantiationException ex) {
-            ex.printStackTrace();
-        } catch (IllegalAccessException ex) {
-            ex.printStackTrace();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

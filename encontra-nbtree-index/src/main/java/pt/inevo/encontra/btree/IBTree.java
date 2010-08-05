@@ -7,7 +7,7 @@ import pt.inevo.encontra.index.IndexEntry;
  * Generic IBTree to be extended by diferent IBTree implementations.
  * @param <O> the type of the entries to this IBTree
  */
-public interface IBTree<O extends IndexEntry> {
+public interface IBTree<O extends IndexEntry & Serializable> {
 
     /**
      *

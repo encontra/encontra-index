@@ -77,6 +77,7 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
     }
 
     @Override
+    @SuppressWarnings("empty-statement")
     public E getLast() {
         ITupleBrowser tempBrowser = index.browse();
         while(tempBrowser.getNext() != null);
@@ -133,10 +134,6 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
 
         return null;
     }
-
-//    public IBTree getBTree() {
-//        return index;
-//    }
 
     @Override
     public IEntity save(IEntity object) {

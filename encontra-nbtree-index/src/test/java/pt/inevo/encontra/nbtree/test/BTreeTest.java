@@ -62,15 +62,15 @@ public class BTreeTest {
         boolean value = btree.remove(new EntityTestObject(3d, "Description of object 3"));
         System.out.println("Removing an existent entry:" + value);
 
-        System.out.println("Object was removed:" + btree.hasEntry(new EntityTestObject(3d, "Description of object 3")));
+        System.out.println("Object exists:" + btree.hasEntry(new EntityTestObject(3d, "Description of object 3")));
 
         value = btree.remove(new EntityTestObject(14d, "Description of an non existent object."));
         System.out.println("Removing a non existent entry:" + value);
 
         System.out.println("Object was not removed, because doesn't exist:" + btree.hasEntry(new EntityTestObject(14d, "Description of an non existent object.")));
 
-        ITupleBrowser browser = btree.browse();
-        ITuple tuple;
+        ITupleBrowser<EntityTestObject> browser = btree.browse();
+        ITuple<EntityTestObject> tuple;
 
         System.out.println("Iterating over all the entries...");
         tuple = browser.getNext();

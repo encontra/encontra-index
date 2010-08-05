@@ -1,8 +1,9 @@
 package pt.inevo.encontra.nbtree.test;
 
+import java.io.Serializable;
 import pt.inevo.encontra.index.IndexEntry;
 
-public class EntityTestObject implements IndexEntry<Double, String> {
+public class EntityTestObject implements IndexEntry<Double, String>, Serializable {
 
     private Double key;
     private String description;
@@ -35,5 +36,10 @@ public class EntityTestObject implements IndexEntry<Double, String> {
     @Override
     public void setValue(String o) {
         this.description = o;
+    }
+
+    @Override
+    public String toString(){
+        return "[Key: " + key + ", Description: " + description +"]";
     }
 }

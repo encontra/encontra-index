@@ -7,7 +7,6 @@ import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.index.search.Searcher;
-import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.Query.QueryType;
@@ -84,7 +83,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
 
         ResultSet resultSet = new ResultSet<Descriptor>();
-        DescriptorList results = new DescriptorList(maxHits, d, new EuclideanDistanceMeasure());
+        DescriptorList results = new DescriptorList(maxHits, d);
 
         //linear knn search, start from the beginning
         index.begin();

@@ -4,8 +4,6 @@ import java.util.Iterator;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import pt.inevo.encontra.common.distance.DistanceMeasure;
-import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.descriptors.Descriptor;
 
 /**
@@ -20,15 +18,10 @@ public class DescriptorList implements Iterable<Descriptor> {
     private Descriptor seedP, farPoint;
     private double farDistance;
     private int size;
-    /**
-     * The default distanceCalculator is the Euclidean distance but can change
-     */
-    private DistanceMeasure distanceCalculator;
 
-    public DescriptorList(int size, Descriptor seedPoint, DistanceMeasure distancePointCalculator) {
+    public DescriptorList(int size, Descriptor seedPoint) {
         this.seedP = seedPoint;
         this.size = size;
-        this.distanceCalculator = distancePointCalculator;
 
         sortedPoints = new TreeSet<Descriptor>(new Comparator<Descriptor>() {
 
@@ -50,14 +43,6 @@ public class DescriptorList implements Iterable<Descriptor> {
                 }
             }
         });
-    }
-
-    /**
-     * Constructs a DescriptorList with a specified default size.
-     * @param size
-     */
-    public DescriptorList(int size, Descriptor seedPoint) {
-        this(size, seedPoint, new EuclideanDistanceMeasure());
     }
 
     /**
