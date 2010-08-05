@@ -70,15 +70,16 @@ public class jdbmBTree<O extends IndexEntry> implements IBTree<O> {
     @Override
     public boolean insert(O entry) {
         try {
-            if (btree.insert(entry.getKey(), entry.getValue(), false) != null) {
+            if (btree.insert(entry.getKey(), entry, false) != null) {
                 //there was a collision with the key, user must re-try
                 return false;
             }
+            recman.commit();
         } catch (IOException ex) {
             ex.printStackTrace();
             return false;
         }
-
+        
         return true;
     }
 

@@ -73,7 +73,7 @@ public class DescriptorList implements Iterable<Descriptor> {
                 return true;
             } else {
                 double distance = seedP.getDistance(point);
-                if (distance > farDistance) {
+                if (distance >= farDistance) {
                     return false;
                 } else {
                     sortedPoints.remove(farPoint);

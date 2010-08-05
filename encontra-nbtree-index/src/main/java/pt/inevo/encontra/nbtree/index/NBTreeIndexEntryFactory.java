@@ -50,7 +50,7 @@ public class NBTreeIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
     protected O setupObject(NBTreeIndexEntry entry, O object) {
 
         if (object instanceof Descriptor){
-            return object;
+            return (O)entry.getValue();
         } else {
             try {
                 //TO DO - check if this is correct

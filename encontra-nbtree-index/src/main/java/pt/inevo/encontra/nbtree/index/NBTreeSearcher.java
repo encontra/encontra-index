@@ -1,15 +1,12 @@
 package pt.inevo.encontra.nbtree.index;
 
 import pt.inevo.encontra.btree.DescriptorList;
-import pt.inevo.encontra.btree.ITuple;
-import pt.inevo.encontra.btree.ITupleBrowser;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.index.search.Searcher;
-import pt.inevo.encontra.btree.IBTree;
 import pt.inevo.encontra.common.distance.EuclideanDistanceMeasure;
 import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
@@ -85,130 +82,27 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
+
         ResultSet resultSet = new ResultSet<Descriptor>();
+        DescriptorList results = new DescriptorList(maxHits, d, new EuclideanDistanceMeasure());
 
-        IBTree tree = index.getBTree();
-        final double MAX_FAR = Double.MAX_VALUE;
-        final double DELTA = 0.01;
-        ITupleBrowser lcursor;
-        ITupleBrowser rcursor;
-        ITuple tuple;
-
-        NBTreeIndexEntry iEntry = (NBTreeIndexEntry)index.getEntryFactory().createIndexEntry(d);
-        Descriptor desc = iEntry.getValue();
-
-        DescriptorList results = new DescriptorList(maxHits, desc, new EuclideanDistanceMeasure());
-        double val;
-        double rightLimit;
-        double leftLimit;
-        double startPoint;
-        double farLimit;
-        boolean keepSearchRight = true;
-        boolean keepSearchLeft = true;
-        boolean getPrevious = false;
-        boolean getNext = false;
-
-        farLimit = MAX_FAR;
-        val = Double.parseDouble(iEntry.getKey().toString());
-
-        startPoint = val;
-        rightLimit = startPoint + DELTA;
-        leftLimit = startPoint - DELTA;
-        rcursor = tree.browse(val);
-        lcursor = tree.browse(val);
-
-        while (keepSearchRight || keepSearchLeft) {
-            //going right
-            if (keepSearchRight) {
-                if (getPrevious) {
-                    getPrevious = false;
-                    tuple = rcursor.getPrevious();
-                }
-                tuple = rcursor.getNext();
-                if (tuple != null) {
-                    double searchKey = Double.parseDouble(tuple.getKey().toString());
-                    Descriptor p = (Descriptor) tuple.getEntry();
-                    while (searchKey <= rightLimit && keepSearchRight) {
-                        if (val <= farLimit) {
-                            val = desc.getDistance(p);
-                        }
-                        if (val <= farLimit) {
-                            //original version was just '<'
-                            if (!results.contains(p)) {
-                                //insert only if it doesn't already exists
-                                if (!results.addDescriptor(p)) {
-                                    /*we are not improving the results going
-                                    this way, so stop the search this way*/
-                                    keepSearchRight = false;
-                                    break;
-                                }
-                            }
-                        }
-                        tuple = rcursor.getNext();
-                        if (tuple != null) {
-                            keepSearchRight = false;
-                            break;
-                        }
-                        searchKey = Double.parseDouble(tuple.getKey().toString());
-                        p = (Descriptor) tuple.getEntry();
-                    }
-                    if (keepSearchRight) {
-                        rightLimit = Double.parseDouble(tuple.getKey().toString()) + DELTA;
-                        getPrevious = true;
-                    } else {
-                        rightLimit += DELTA;
-                        getPrevious = true;
-                    }
-                } else {
-                    keepSearchRight = false;
-                }
-            }
-            if (leftLimit < 0) {
-                leftLimit = 0;
-            }
-            if (keepSearchLeft) {
-                if (getNext) {
-                    getNext = false;
-                    tuple = lcursor.getNext();
-                }
-                tuple = lcursor.getPrevious();
-                if (tuple != null) {
-                    double searchKey = Double.parseDouble(tuple.getKey().toString());
-                    Descriptor p = (Descriptor) tuple.getEntry();
-                    while (searchKey >= leftLimit && keepSearchLeft) {
-                        val = desc.getDistance(p);
-                        if (val <= farLimit) {
-                            //original version is just '<'
-                            if (!results.contains(p)) {
-                                //insert only if it doesn't already exists
-                                if (!results.addDescriptor(p)) {
-                                    /*we are not improving the results going
-                                    this way, so stop the search this way*/
-                                    keepSearchLeft = false;
-                                    break;
-                                }
-                            }
-                        }
-                        tuple = lcursor.getPrevious();
-                        if (tuple != null) {
-                            keepSearchLeft = false;
-                            break;
-                        }
-                        searchKey = Double.parseDouble(tuple.getKey().toString());
-                        p = (Descriptor) tuple.getEntry();
-                    }
-                    if (keepSearchLeft) {
-                        leftLimit = Double.parseDouble(tuple.getKey().toString()) - DELTA;
-                        getNext = true;
-                    }
-                } else {
-                    keepSearchLeft = false;
+        //linear knn search, start from the beginning
+        index.begin();
+        while (index.hasNext()) {
+            Descriptor p = index.getNext();
+            if (!results.contains(p)) {
+                //insert only if it doesn't already exists
+                if (!results.addDescriptor(p)) {
+                    /*we are not improving the results going
+                    this way, so stop the search*/
+                    break;
                 }
             }
         }
+
         for (Descriptor descr : results.getDescriptors()) {
             Result<Descriptor> result = new Result<Descriptor>(descr);
-            result.setSimilarity(descr.getDistance(desc)); // TODO - This is distance not similarity!!!
+            result.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
             resultSet.add(result);
         }
         //IS THIS NECESSARY

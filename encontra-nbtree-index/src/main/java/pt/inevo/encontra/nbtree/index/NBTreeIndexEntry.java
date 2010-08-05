@@ -4,7 +4,7 @@ import java.io.Serializable;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.IndexEntry;
 
-public class NBTreeIndexEntry<K extends Serializable, V extends Descriptor> implements IndexEntry<K,V> {
+public class NBTreeIndexEntry<K extends Serializable, V extends Descriptor> implements IndexEntry<K,V>, Serializable {
 
     protected K key;
     protected V value;
