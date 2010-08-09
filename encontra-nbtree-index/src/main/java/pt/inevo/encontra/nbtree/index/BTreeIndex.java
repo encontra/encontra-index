@@ -126,6 +126,19 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
     }
 
     @Override
+    public boolean setCursor(E entry) {
+        NBTreeIndexEntry indexEntry = (NBTreeIndexEntry) getEntryFactory().createIndexEntry(entry);
+        entryBrowser = index.browse(indexEntry.getKey());
+        return true;
+    }
+
+    @Override
+    public E getEntry(Serializable key) {
+        IndexEntry entry = index.find(key);
+        return (E) getEntryFactory().getObject(entry);
+    }
+
+    @Override
     public IEntity get(Serializable id) {
 
         IndexEntry ientry = index.find(id);

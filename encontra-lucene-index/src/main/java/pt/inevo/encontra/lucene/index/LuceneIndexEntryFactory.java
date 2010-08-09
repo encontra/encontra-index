@@ -3,30 +3,27 @@ package pt.inevo.encontra.lucene.index;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
-import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.IndexEntryFactory;
 import pt.inevo.encontra.storage.Entry;
 import pt.inevo.encontra.storage.IEntry;
 
 import java.util.List;
 
-
-public class LuceneIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O,LuceneIndexEntry> {
+public class LuceneIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O, LuceneIndexEntry> {
 
     public LuceneIndexEntryFactory(Class indexedObjectClass) {
-        super(LuceneIndexEntry.class,indexedObjectClass);
+        super(LuceneIndexEntry.class, indexedObjectClass);
     }
-
 
     @Override
     protected LuceneIndexEntry setupIndexEntry(O object, LuceneIndexEntry entry) {
 
         Document doc = new Document();
-        int i=0;
-        Object val=object.getValue();
-        if(val instanceof IEntry[]){
-            IEntry[] objects=(IEntry[]) val;
-            for(IEntry obj : objects) {
+        int i = 0;
+        Object val = object.getValue();
+        if (val instanceof IEntry[]) {
+            IEntry[] objects = (IEntry[]) val;
+            for (IEntry obj : objects) {
                 doc.add(new Field(obj.getId().toString(), obj.getValue().toString(), Field.Store.YES, Field.Index.NO));
             }
         } else {
@@ -42,15 +39,15 @@ public class LuceneIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
 
     @Override
     protected O setupObject(LuceneIndexEntry entry, O object) {
-        Document doc=entry.getValue();
-        List<Fieldable> fields=doc.getFields();
+        Document doc = entry.getValue();
+        List<Fieldable> fields = doc.getFields();
 
-        Fieldable idField=null;
+        Fieldable idField = null;
         // EXTRACT ID
-        for(Fieldable field : fields) {
-            if(field.name().equals("IDENTIFIER")){
+        for (Fieldable field : fields) {
+            if (field.name().equals("IDENTIFIER")) {
                 object.setId(field.stringValue());
-                idField=field;
+                idField = field;
 
             }
         }
@@ -58,19 +55,17 @@ public class LuceneIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
         // Remove this field
         fields.remove(idField);
 
-        if(fields.size()==1) { // Simple value
-           object.setValue(fields.get(0).stringValue());
+        if (fields.size() == 1) { // Simple value
+            object.setValue(fields.get(0).stringValue());
         } else {
-            IEntry[] values=new IEntry[fields.size()];
-            int i=0;
-            for(Fieldable field : fields) {
-                values[i++]=new Entry(field.name(),field.stringValue());
+            IEntry[] values = new IEntry[fields.size()];
+            int i = 0;
+            for (Fieldable field : fields) {
+                values[i++] = new Entry(field.name(), field.stringValue());
             }
             object.setValue(values);
         }
 
         return object;
     }
-
-
 }

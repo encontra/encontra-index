@@ -3,6 +3,7 @@ package pt.inevo.encontra.nbtree.index;
 import pt.inevo.encontra.btree.DescriptorList;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.index.Index;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
@@ -17,7 +18,7 @@ import pt.inevo.encontra.storage.IEntry;
 public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
 
     protected DescriptorExtractor extractor;
-    protected BTreeIndex<Descriptor> index;
+    protected Index<Descriptor> index;
     protected EntityStorage storage;
 
     public void setDescriptorExtractor(DescriptorExtractor extractor) {
@@ -32,7 +33,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         this.index = index;
     }
 
-    public BTreeIndex getIndex() {
+    public Index getIndex() {
         return index;
     }
 
@@ -86,9 +87,37 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         DescriptorList results = new DescriptorList(maxHits, d);
 
         //linear knn search, start from the beginning
-        index.begin();
-        while (index.hasNext()) {
+//        index.begin();
+//        while (index.hasNext()) {
+//            Descriptor p = index.getNext();
+//            if (!results.contains(p)) {
+//                //insert only if it doesn't already exists
+//                if (!results.addDescriptor(p)) {
+//                    /*we are not improving the results going
+//                    this way, so stop the search*/
+//                    break;
+//                }
+//            }
+//        }
+        
+        //two way knn - one way
+        index.setCursor(d);
+          while (index.hasNext()) {
             Descriptor p = index.getNext();
+            if (!results.contains(p)) {
+                //insert only if it doesn't already exists
+                if (!results.addDescriptor(p)) {
+                    /*we are not improving the results going
+                    this way, so stop the search*/
+                    break;
+                }
+            }
+        }
+
+        //two way knn - other way
+        index.setCursor(d);
+          while (index.hasPrevious()) {
+            Descriptor p = index.getPrevious();
             if (!results.contains(p)) {
                 //insert only if it doesn't already exists
                 if (!results.addDescriptor(p)) {

@@ -12,30 +12,40 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.NoLockFactory;
-
 
 import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
-public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements PersistentIndex<O>{
+public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements PersistentIndex<O> {
 
     protected String id;
+    protected int iterator;
+    protected IndexWriter writer;
+    protected IndexReader reader;
 
-    IndexWriter writer;
-    IndexReader reader;
-
-    public LuceneIndex(String id,Class <O> descriptorClass) {
-        this.id = id;
-        this.setEntryFactory(new LuceneIndexEntryFactory(descriptorClass));
+    public LuceneIndex(String id, Class<O> descriptorClass) {
+        try {
+            this.id = id;
+            this.iterator = 0;
+            writer = new IndexWriter(FSDirectory.open(new File(id)), new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
+            reader = IndexReader.open(FSDirectory.open(new File(id), new NoLockFactory()));
+            this.setEntryFactory(new LuceneIndexEntryFactory(descriptorClass));
+        } catch (CorruptIndexException ex) {
+            ex.printStackTrace();
+        } catch (LockObtainFailedException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
-
 
     @Override
     public boolean insert(O obj) {
         try {
-            LuceneIndexEntry entry=(LuceneIndexEntry) getEntryFactory().createIndexEntry(obj);
+            LuceneIndexEntry entry = (LuceneIndexEntry) getEntryFactory().createIndexEntry(obj);
             writer.addDocument(entry.getValue());
             writer.commit();
         } catch (CorruptIndexException ex) {
@@ -53,23 +63,22 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
         return reader.numDocs();
     }
 
-    @Override
-    public O get(int idx) {
-        boolean hasDeletions = reader.hasDeletions();
-        // bugfix by Roman Kern
-        if (hasDeletions && reader.isDeleted(idx)) {
-            return null;
-        }
-        try {
-            Document doc=reader.document(idx);
-            LuceneIndexEntry entry=new LuceneIndexEntry();
-            entry.setValue(reader.document(idx));
-            return (O) getEntryFactory().getObject(entry);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
+//    @Override
+//    public O get(int idx) {
+//        boolean hasDeletions = reader.hasDeletions();
+//        // bugfix by Roman Kern
+//        if (hasDeletions && reader.isDeleted(idx)) {
+//            return null;
+//        }
+//        try {
+//            Document doc=reader.document(idx);
+//            LuceneIndexEntry entry=new LuceneIndexEntry();
+//            entry.setValue(reader.document(idx));
+//            return (O) getEntryFactory().getObject(entry);
+//        } catch (IOException e) {
+//            return null;
+//        }
+//    }
     @Override
     public boolean contains(O entry) {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
@@ -114,19 +123,15 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
     }
     return instance;
     }*/
-
-
-
-
     @Override
     public List<O> getAll() {
         int numDocs = reader.numDocs();
         ArrayList<O> objs = new ArrayList<O>(numDocs);
         for (int i = 0; i < numDocs; i++) {
             try {
-                LuceneIndexEntry entry=new LuceneIndexEntry();
+                LuceneIndexEntry entry = new LuceneIndexEntry();
                 entry.setValue(reader.document(i));
-                objs.add((O)getEntryFactory().getObject(entry));
+                objs.add((O) getEntryFactory().getObject(entry));
             } catch (CorruptIndexException ex) {
                 ex.printStackTrace();
             } catch (IOException ex) {
@@ -137,7 +142,120 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
         return objs;
     }
 
+    @Override
+    public void begin() {
+        iterator = 0;
+    }
 
+    @Override
+    public void end() {
+        iterator = reader.numDocs();
+    }
+
+    @Override
+    public boolean setCursor(O entry) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public O getFirst() {
+        try {
+            LuceneIndexEntry entry = new LuceneIndexEntry();
+            entry.setValue(reader.document(0));
+            return (O) getEntryFactory().getObject(entry);
+        } catch (CorruptIndexException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        //the first was not found
+        return null;
+    }
+
+    @Override
+    public O getLast() {
+        try {
+            LuceneIndexEntry entry = new LuceneIndexEntry();
+            entry.setValue(reader.document(reader.numDocs()));
+            return (O) getEntryFactory().getObject(entry);
+        } catch (CorruptIndexException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        //the first was not found
+        return null;
+    }
+
+    @Override
+    public O getEntry(Serializable key) {
+        int numDocs = reader.numDocs();
+        for (int i = 0; i < numDocs; i++) {
+            try {
+                Document doc = reader.document(i);
+                String docKey = doc.get("IDENTIFIER");
+                if (docKey.equals(key)) {
+                    LuceneIndexEntry entry = new LuceneIndexEntry();
+                    entry.setValue(doc);
+                    return (O) getEntryFactory().getObject(entry);
+                }
+            } catch (CorruptIndexException ex) {
+                ex.printStackTrace();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        //entry was not found in the index
+        return null;
+    }
+
+    @Override
+    public O getNext() {
+        if (reader.numDocs() > iterator) {
+            try {
+                LuceneIndexEntry entry = new LuceneIndexEntry();
+                entry.setValue(reader.document(iterator++));
+                return (O) getEntryFactory().getObject(entry);
+            } catch (CorruptIndexException ex) {
+                ex.printStackTrace();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean hasNext() {
+        if (reader.numDocs() > iterator) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public O getPrevious() {
+        if (iterator > 0) {
+            try {
+                LuceneIndexEntry entry = new LuceneIndexEntry();
+                entry.setValue(reader.document(iterator--));
+                return (O) getEntryFactory().getObject(entry);
+            } catch (CorruptIndexException ex) {
+                ex.printStackTrace();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean hasPrevious() {
+        if (iterator > 0){
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public boolean load(String path) {
