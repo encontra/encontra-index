@@ -29,7 +29,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         return extractor;
     }
 
-    public void setIndex(BTreeIndex index) {
+    public void setIndex(Index index) {
         this.index = index;
     }
 

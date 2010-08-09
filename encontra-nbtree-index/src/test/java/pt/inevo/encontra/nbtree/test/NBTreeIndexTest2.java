@@ -1,55 +1,116 @@
 package pt.inevo.encontra.nbtree.test;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
-import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
-import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
+import pt.inevo.encontra.engine.Engine;
+import junit.framework.TestCase;
+import pt.inevo.encontra.descriptors.CompositeDescriptor;
+import pt.inevo.encontra.descriptors.CompositeDescriptorExtractor;
+import pt.inevo.encontra.descriptors.Descriptor;
+import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
-import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.index.ResultSet;
-import pt.inevo.encontra.index.SimpleIndex;
+import pt.inevo.encontra.image.descriptors.ScalableColorDescriptor;
+import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.nbtree.index.BTreeIndex;
 import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
-import pt.inevo.encontra.query.KnnQuery;
-import pt.inevo.encontra.query.Query;
-import pt.inevo.encontra.storage.EntityStorage;
-import pt.inevo.encontra.storage.IEntry;
-import pt.inevo.encontra.storage.SimpleObjectStorage;
+import pt.inevo.encontra.query.*;
+import pt.inevo.encontra.storage.*;
 
-public class NBTreeTest2 {
+/**
+ * Smoke test: testing the creation of a simple engine, two indexes and the
+ * execution of two random queries (testing also the combination of the queries).
+ * @author ricardo
+ */
+public class NBTreeIndexTest2 extends TestCase {
 
-    public NBTreeTest2() {
-    }
+    public class SerializableBufferedImage implements Serializable {
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
+        public int width;
+        public int height;
+        public int[] pixels;
+        private static final long serialVersionUID = 7526472295622776147L;
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
+        public SerializableBufferedImage() {
+            width = 0;
+            height = 0;
+        }
 
-    @Before
-    public void setUp() {
-    }
+        public SerializableBufferedImage(int width, int height, int[] pixels) {
+            this.width = width;
+            this.height = height;
+            this.pixels = pixels;
+        }
 
-    @After
-    public void tearDown() {
+        public SerializableBufferedImage(BufferedImage image) {
+            this.width = image.getWidth();
+            this.height = image.getHeight();
+            this.pixels = new int[width * height];
+            image.getRGB(0, 0, width, height, pixels, 0, width);
+        }
+
+        public BufferedImage getBufferedImage() {
+            if (pixels == null) {
+                width = 1;
+                height = 1;
+                pixels = new int[1];
+                pixels[0] = 128;
+            }
+            BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+            image.setRGB(0, 0, getWidth(), getHeight(), getPixels(), 0, getWidth());
+            return image;
+        }
+
+        /**
+         * @return the width
+         */
+        public int getWidth() {
+            return width;
+        }
+
+        /**
+         * @param width the width to set
+         */
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        /**
+         * @return the height
+         */
+        public int getHeight() {
+            return height;
+        }
+
+        /**
+         * @param height the height to set
+         */
+        public void setHeight(int height) {
+            this.height = height;
+        }
+
+        /**
+         * @return the pixels
+         */
+        public int[] getPixels() {
+            return pixels;
+        }
+
+        /**
+         * @param pixels the pixels to set
+         */
+        public void setPixels(int[] pixels) {
+            this.pixels = pixels;
+        }
     }
 
     public static class FileUtil {
@@ -192,8 +253,21 @@ public class NBTreeTest2 {
         }
     }
 
-    @Test
-    public void test() {
+    public NBTreeIndexTest2(String testName) {
+        super(testName);
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    public void testMain() {
         //Creating the EntityStorage for saving the objects
         EntityStorage storage = new SimpleObjectStorage(ImageModel.class);
 
@@ -201,6 +275,7 @@ public class NBTreeTest2 {
         DescriptorExtractor stringDescriptorExtractor = new SimpleDescriptorExtractor(StringDescriptor.class);
 
         //Creating the engine
+        System.out.println("Creating the Retrieval Engine...");
         Engine<ImageModel> e = new SimpleEngine<ImageModel>();
         e.setObjectStorage(storage);
         e.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
@@ -218,10 +293,16 @@ public class NBTreeTest2 {
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
 
-        //A searcher for the image content - using a simple descriptor
+        CompositeDescriptorExtractor compositeImageDescriptorExtractor = new CompositeDescriptorExtractor(IndexedObject.class, null);
+        compositeImageDescriptorExtractor.addExtractor(new ColorLayoutDescriptor<IndexedObject>(), 1);
+        compositeImageDescriptorExtractor.addExtractor(new ScalableColorDescriptor(), 1);
+
+        //A searcher for the image content (using only one type of descriptor
         SimpleImageSearcher imageSearcher = new SimpleImageSearcher();
-        imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor());
-        imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
+        //using a composite descriptor
+        imageSearcher.setDescriptorExtractor(compositeImageDescriptorExtractor);
+        //using a BTreeIndex
+        imageSearcher.setIndex(new BTreeIndex(CompositeDescriptor.class));
 
         searcher.addSearcher("filename", filenameSearcher);
         searcher.addSearcher("description", descriptionSearcher);
@@ -229,11 +310,28 @@ public class NBTreeTest2 {
 
         e.setSearcher(searcher);
 
+        System.out.println("Loading some objects to the test indexes...");
         ImageModelLoader loader = new ImageModelLoader();
         List<ImageModel> images = loader.getImages("./src/test/resources/additional_images");
         for (ImageModel im : images) {
             e.insert(im);
         }
-        System.out.println("Images were successfully saved inserted in the engine.");
+
+        try {
+            System.out.println("Creating a knn query...");
+            BufferedImage image = ImageIO.read(new File("./src/test/resources/28004.jpg"));
+
+            Query knnQuery = new KnnQuery(new IndexedObject<Serializable, BufferedImage>(28004, image), 20);
+            System.out.println("Searching for elements in the engine...");
+            ResultSet<ImageModel> results = e.search(knnQuery);
+
+            System.out.println("Number of retrieved elements: " + results.size());
+            for (Result<ImageModel> r : results) {
+                System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
+                System.out.println("Similarity: " + r.getSimilarity());
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }

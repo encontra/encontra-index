@@ -290,16 +290,14 @@ public class NBTreeIndexTest extends TestCase {
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
 
-//        CompositeDescriptorExtractor compositeImageDescriptorExtractor = new CompositeDescriptorExtractor(IndexedObject.class, null);
-//        compositeImageDescriptorExtractor.addExtractor(new ColorLayoutDescriptor<IndexedObject>(), 1);
-//        compositeImageDescriptorExtractor.addExtractor(new ScalableColorDescriptor(), 1);
-
         //A searcher for the image content (using only one type of descriptor
         SimpleImageSearcher imageSearcher = new SimpleImageSearcher();
+        //using a single descriptor
         imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>());
+        //using a BTreeIndex
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
-//        imageSearcher.setDescriptorExtractor(compositeImageDescriptorExtractor);
-//        imageSearcher.setIndex(new BTreeIndex(CompositeDescriptor.class));
+        //using a SimpleIndex
+        //imageSearcher.setIndex(new SimpleIndex(ColorLayoutDescriptor.class));
 
         searcher.addSearcher("filename", filenameSearcher);
         searcher.addSearcher("description", descriptionSearcher);

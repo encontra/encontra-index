@@ -1,5 +1,8 @@
 package pt.inevo.encontra.nbtree.index;
 
+import java.util.ArrayList;
+import java.util.List;
+import pt.inevo.encontra.descriptors.CompositeDescriptor;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.IndexEntryFactory;
 import pt.inevo.encontra.storage.IEntry;
@@ -19,6 +22,18 @@ public class NBTreeIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
             Descriptor origin;
             try {
                 origin = (Descriptor) objectClass.newInstance();
+
+                //TO DO - this must be removed from here?
+                if (desc instanceof CompositeDescriptor){
+                    CompositeDescriptor d = (CompositeDescriptor)origin;
+                    List<Descriptor> newDescriptors = new ArrayList<Descriptor>();
+
+                    for (Descriptor ds: ((CompositeDescriptor)desc).getDescriptors()){
+                        newDescriptors.add(ds.getClass().newInstance());
+                    }
+                    d.setDescriptors(newDescriptors);
+                }
+
                 double dist = desc.getDistance(origin);
 
                 //set the key and the value
