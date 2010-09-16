@@ -110,7 +110,7 @@ public class DescriptorList implements Iterable<Descriptor> {
      * @return
      */
     public Descriptor[] getDescriptors() {
-        return sortedPoints.toArray(new Descriptor[1]);
+        return sortedPoints.toArray(new Descriptor[0]);
     }
 
     /**

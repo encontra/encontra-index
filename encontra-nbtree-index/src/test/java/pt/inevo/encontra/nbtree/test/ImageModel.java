@@ -30,7 +30,7 @@ public class ImageModel implements IEntity<Long> {
         this.id = id;
     }
 
-    @Indexed
+//    @Indexed
     public String getFilename() {
         return filename;
     }
@@ -39,7 +39,7 @@ public class ImageModel implements IEntity<Long> {
         this.filename = filename;
     }
 
-    @Indexed
+//    @Indexed
     public String getDescription() {
         return description;
     }
