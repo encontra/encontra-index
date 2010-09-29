@@ -11,6 +11,12 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.NoLockFactory;
@@ -63,66 +69,43 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
         return reader.numDocs();
     }
 
-//    @Override
-//    public O get(int idx) {
-//        boolean hasDeletions = reader.hasDeletions();
-//        // bugfix by Roman Kern
-//        if (hasDeletions && reader.isDeleted(idx)) {
-//            return null;
-//        }
-//        try {
-//            Document doc=reader.document(idx);
-//            LuceneIndexEntry entry=new LuceneIndexEntry();
-//            entry.setValue(reader.document(idx));
-//            return (O) getEntryFactory().getObject(entry);
-//        } catch (IOException e) {
-//            return null;
-//        }
-//    }
     @Override
     public boolean contains(O entry) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+
+        LuceneIndexEntry indexEntry = (LuceneIndexEntry) getEntryFactory().createIndexEntry(entry);
+        Term t = new Term("IDENTIFIER", indexEntry.getValue().get("IDENTIFIER"));
+        TermQuery query = new TermQuery(t);
+
+        Searcher searcher = new IndexSearcher(reader);
+        try {
+            TopDocs docs = searcher.search(query, 1);
+            if (docs.totalHits != 0)
+                    return true;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
     }
 
     @Override
     public boolean remove(O obj) {
-        //TO DO - remove the object from the index
-        return true;
+
+        LuceneIndexEntry indexEntry = (LuceneIndexEntry) getEntryFactory().createIndexEntry(obj);
+        Term t = new Term("IDENTIFIER", indexEntry.getValue().get("IDENTIFIER"));
+        TermQuery query = new TermQuery(t);
+        try {
+            writer.deleteDocuments(query);
+            return true;
+        } catch (CorruptIndexException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
     }
 
-
-    /*
-     * Create a new object of type T
-     * @param 
-     * @return
-     *
-    protected T newAbstractObject(Object id){
-    T instance= null;
-    try {
-    instance = Instantiator.<T>fromTemplate(this,0).instantiate();
-    } catch (InvocationTargetException e) {
-    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-    }
-    //T instance=null;
-    Class<T> tClass;
-    Type type = getClass().getGenericSuperclass();
-    if (type instanceof ParameterizedType) {
-    ParameterizedType paramType = (ParameterizedType)type;
-    tClass = (Class<T>) paramType.getActualTypeArguments()[0].getClass(); // Type parameter 0 is the AbstractObject class
-
-    try {
-    instance = tClass.newInstance();
-    } catch (InstantiationException e) {
-    e.printStackTrace();
-    } catch (IllegalAccessException e) {
-    e.printStackTrace();
-    }
-    }
-    if(instance!=null) {
-    instance.setId(id);
-    }
-    return instance;
-    }*/
     @Override
     public List<O> getAll() {
         int numDocs = reader.numDocs();
@@ -154,7 +137,22 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
 
     @Override
     public boolean setCursor(O entry) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        
+        LuceneIndexEntry indexEntry = (LuceneIndexEntry) getEntryFactory().createIndexEntry(entry);
+        Term t = new Term("IDENTIFIER", indexEntry.getValue().get("IDENTIFIER"));
+        TermQuery query = new TermQuery(t);
+
+        Searcher searcher = new IndexSearcher(reader);
+        try {
+            TopDocs docs = searcher.search(query, 1);
+            if (docs.totalHits != 0){
+                ScoreDoc [] sDocs = docs.scoreDocs;
+                iterator = sDocs[0].doc;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     @Override

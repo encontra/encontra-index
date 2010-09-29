@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javax.imageio.ImageIO;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
@@ -158,10 +159,11 @@ public class NBTreeIndexTest extends TestCase {
         }
     }
 
-    public class ImageModelLoader {
+    public static class ImageModelLoader implements Iterable<File> {
 
         protected String imagesPath = "";
-        protected Long idCount = 0l;
+        protected static Long idCount = 0l;
+        protected List<File> imagesFiles;
 
         public ImageModelLoader() {
         }
@@ -170,7 +172,7 @@ public class NBTreeIndexTest extends TestCase {
             this.imagesPath = imagesPath;
         }
 
-        public ImageModel loadImage(File image) {
+        public static ImageModel loadImage(File image) {
 
             //for now only sets the filename
             ImageModel im = new ImageModel(image.getAbsolutePath(), "", null);
@@ -205,8 +207,24 @@ public class NBTreeIndexTest extends TestCase {
             return images;
         }
 
+        public void load(String path) {
+            File root = new File(path);
+            String[] extensions = {"jpg", "png"};
+
+            imagesFiles = FileUtil.findFilesRecursively(root, extensions);
+        }
+
+        public void load() {
+            load(imagesPath);
+        }
+
         public List<ImageModel> getImages() {
             return getImages(imagesPath);
+        }
+
+        @Override
+        public Iterator<File> iterator() {
+            return imagesFiles.iterator();
         }
     }
 
@@ -299,27 +317,43 @@ public class NBTreeIndexTest extends TestCase {
         //using a SimpleIndex
         //imageSearcher.setIndex(new SimpleIndex(ColorLayoutDescriptor.class));
 
-        searcher.addSearcher("filename", filenameSearcher);
-        searcher.addSearcher("description", descriptionSearcher);
+//        searcher.addSearcher("filename", filenameSearcher);
+//        searcher.addSearcher("description", descriptionSearcher);
         searcher.addSearcher("image", imageSearcher);
 
         e.setSearcher(searcher);
 
         System.out.println("Loading some objects to the test indexes...");
-        ImageModelLoader loader = new ImageModelLoader();
-        List<ImageModel> images = loader.getImages("./src/test/resources/additional_images");
-        for (ImageModel im : images) {
+//        ImageModelLoader loader = new ImageModelLoader("./src/test/resources/parts");
+//        ImageModelLoader loader = new ImageModelLoader("./src/test/resources/DailyDrawings");
+        ImageModelLoader loader = new ImageModelLoader("./src/test/resources/additional_images");
+//        List<ImageModel> images = loader.getImages("./src/test/resources/additional_images");
+//        List<ImageModel> images = loader.getImages("./src/test/resources/DailyDrawings");
+        loader.load();
+        Iterator<File> it = loader.iterator();
+
+        for (int i = 0; it.hasNext(); i++) {
+            File f = it.next();
+            ImageModel im = loader.loadImage(f);
             e.insert(im);
+//            if (i % 20 == 0){
+//                long v = Runtime.getRuntime().freeMemory();
+//                System.out.print("Value before: " + v);
+//                Runtime.getRuntime().gc();
+//                v = Runtime.getRuntime().freeMemory();
+//                System.out.println("Value after gc: " + v);
+//            }
         }
 
         try {
             System.out.println("Creating a knn query...");
+//            BufferedImage image = ImageIO.read(new File("./src/test/resources/query.jpg"));
             BufferedImage image = ImageIO.read(new File("./src/test/resources/28004.jpg"));
 
-            Query knnQuery = new KnnQuery(new IndexedObject<Serializable, BufferedImage>(28004, image), 20);
+            Query knnQuery = new KnnQuery(new IndexedObject<Serializable, BufferedImage>(28004, image), 10);
             System.out.println("Searching for elements in the engine...");
             ResultSet<ImageModel> results = e.search(knnQuery);
-            
+
             System.out.println("Number of retrieved elements: " + results.size());
             for (Result<ImageModel> r : results) {
                 System.out.print("Retrieved element: " + r.getResult().toString() + "\t");

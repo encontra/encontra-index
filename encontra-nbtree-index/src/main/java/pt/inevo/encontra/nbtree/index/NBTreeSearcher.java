@@ -68,6 +68,13 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
     }
 
     @Override
+    public boolean remove(O entry) {
+        assert (entry != null);
+        Descriptor descriptor = extractor.extract(entry);
+        return index.remove(descriptor);
+    }
+
+    @Override
     public ResultSet<O> search(Query query) {
         ResultSet<IEntry> results = new ResultSet<IEntry>();
         if (supportsQueryType(query.getType())) {
@@ -155,4 +162,3 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         return results;
     }
 }
-

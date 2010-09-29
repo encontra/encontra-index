@@ -8,13 +8,18 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
+import pt.inevo.encontra.engine.Engine;
+import pt.inevo.encontra.engine.SimpleEngine;
+import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
+import pt.inevo.encontra.storage.EntityStorage;
+import pt.inevo.encontra.storage.SimpleObjectStorage;
 
 /**
  * Test the creation of an ImageObject (with the underlying Document from Lucene)
  * @author ricardo
  */
-public class CreateIndexObjectTest extends TestCase {
+public class DeleteIndexObjectTest extends TestCase {
 
     public static class TestObject extends IndexedObject<Integer,String> {}
 
@@ -29,6 +34,7 @@ public class CreateIndexObjectTest extends TestCase {
 
         @Override
         protected TestObject setupIndexedObject(D1 descriptor, TestObject object) {
+            object.setId(Integer.parseInt(descriptor.getId().toString()));
             object.setValue(descriptor.getValue());
             return object;  //To change body of implemented methods use File | Settings | File Templates.
         }
@@ -36,13 +42,14 @@ public class CreateIndexObjectTest extends TestCase {
         @Override
         public D1 extract(TestObject object) {
             D1 d = new D1();
+            d.setId(object.getId());
             d.setValue("It works!");
             return d;
         }
 
     }
 
-    public CreateIndexObjectTest(String testName) {
+    public DeleteIndexObjectTest(String testName) {
         super(testName);
     }
 
@@ -57,24 +64,37 @@ public class CreateIndexObjectTest extends TestCase {
     }
 
     public void testMain() throws FileNotFoundException {
-        DescriptorExtractor<TestObject, D1> d=new D1Extractor();
-        
-        LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("luceneCreate",TestObject.class);
 
-        DescriptorExtractor<TestObject,D1> extractor=new D1Extractor();
+        EntityStorage storage = new SimpleObjectStorage(TestObject.class);
+
+        Engine<TestObject> e = new SimpleEngine<TestObject>();
+        LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("luceneDelete",TestObject.class);
+        SimpleSearcher searcher = new SimpleSearcher();
+        searcher.setIndex(index);
+        searcher.setObjectStorage(storage);
+        
+        e.setSearcher(searcher);
+        e.setObjectStorage(storage);
+       
         LuceneIndexEntryFactory<D1> entryFactory=new LuceneIndexEntryFactory<D1>(D1.class);
-
         index.setEntryFactory(entryFactory);
-        
 
+        DescriptorExtractor<TestObject, D1> d=new D1Extractor();
+        searcher.setDescriptorExtractor(d);
 
+        //inserting some objects in the index
+        for (int i= 1 ; i < 10 ; i++){
+            TestObject object = new TestObject();
+            object.setId(i);
+            object.setValue("Does it work? Event number " + i);
+            e.insert(object);
+        }
 
-        TestObject object = new TestObject();
-        object.setId(1);
-        object.setValue("Does it work?");
-        index.insert(object);
+        //performing the query
+        TestObject queryObject = new TestObject();
+        queryObject.setId(5);
 
-        //Integer objectId = (Integer) builder.getObjectId(entry);
-        //assertEquals("Works",descriptor.getStringRepresentation());
+        assert (e.remove(queryObject) == true);
+
     }
 }
