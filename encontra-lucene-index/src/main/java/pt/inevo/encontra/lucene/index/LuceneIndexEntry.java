@@ -1,7 +1,6 @@
 package pt.inevo.encontra.lucene.index;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import pt.inevo.encontra.index.IndexEntry;
 
 

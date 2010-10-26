@@ -12,6 +12,7 @@ import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 import pt.inevo.encontra.query.KnnQuery;
@@ -23,11 +24,18 @@ import pt.inevo.encontra.storage.SimpleObjectStorage;
  * Test for searching through a LuceneIndex.
  * @author ricardo
  */
-public class SearchLuceneIndexTest extends TestCase {
+public class SearchLuceneIndexesTest extends TestCase {
 
     public static class TestObject extends IndexedObject<Integer,String> {}
 
     public static class D1 extends SimpleDescriptor{
+        @Override
+        public double getDistance(Descriptor other) {
+            return 0;
+        }
+    }
+
+    public static class D2 extends SimpleDescriptor{
         @Override
         public double getDistance(Descriptor other) {
             return 0;
@@ -50,10 +58,27 @@ public class SearchLuceneIndexTest extends TestCase {
             d.setValue("It works!");
             return d;
         }
-
     }
 
-    public SearchLuceneIndexTest(String testName) {
+    public static class D2Extractor extends DescriptorExtractor<TestObject,D2> {
+
+        @Override
+        protected TestObject setupIndexedObject(D2 descriptor, TestObject object) {
+            object.setId(Integer.parseInt(descriptor.getId().toString()));
+            object.setValue(descriptor.getValue());
+            return object;
+        }
+
+        @Override
+        public D2 extract(TestObject object) {
+            D2 d = new D2();
+            d.setId(object.getId());
+            d.setValue("It now works!");
+            return d;
+        }
+    }
+
+    public SearchLuceneIndexesTest(String testName) {
         super(testName);
     }
 
@@ -68,25 +93,35 @@ public class SearchLuceneIndexTest extends TestCase {
     }
 
     public void testMain() throws FileNotFoundException {
-
         EntityStorage storage = new SimpleObjectStorage(TestObject.class);
 
         Engine<TestObject> e = new SimpleEngine<TestObject>();
-        LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("luceneSearch",TestObject.class);
-        SimpleSearcher searcher = new SimpleSearcher();
-        searcher.setIndex(index);
+        LuceneIndex<TestObject> indexD1 =new LuceneIndex<TestObject>("luceneSearchD1",TestObject.class);
+        LuceneIndex<TestObject> indexD2 =new LuceneIndex<TestObject>("luceneSearchD2",TestObject.class);
+        SimpleCombinedSearcher searcher = new SimpleCombinedSearcher();
         searcher.setObjectStorage(storage);
-        
+
+        SimpleSearcher d1Searcher = new SimpleSearcher();
+        d1Searcher.setDescriptorExtractor(new D1Extractor());
+        d1Searcher.setIndex(indexD1);
+
+        SimpleSearcher d2Searcher = new SimpleSearcher();
+        d2Searcher.setDescriptorExtractor(new D2Extractor());
+        d2Searcher.setIndex(indexD2);
+
+        searcher.addSearcher("d1", d1Searcher);
+        searcher.addSearcher("d2", d2Searcher);
+
         e.setSearcher(searcher);
         e.setObjectStorage(storage);
        
-        LuceneIndexEntryFactory<D1> entryFactory=new LuceneIndexEntryFactory<D1>(D1.class);
-        index.setEntryFactory(entryFactory);
+        LuceneIndexEntryFactory<D1> entryFactoryD1 =new LuceneIndexEntryFactory<D1>(D1.class);
+        indexD1.setEntryFactory(entryFactoryD1);
 
-        DescriptorExtractor<TestObject, D1> d=new D1Extractor();
-        searcher.setDescriptorExtractor(d);
+        LuceneIndexEntryFactory<D2> entryFactoryD2 =new LuceneIndexEntryFactory<D2>(D2.class);
+        indexD2.setEntryFactory(entryFactoryD2);
 
-        //inserting some objects in the index
+        //inserting some objects in the indexD1
         for (int i= 1 ; i < 10 ; i++){
             TestObject object = new TestObject();
             object.setId(i);

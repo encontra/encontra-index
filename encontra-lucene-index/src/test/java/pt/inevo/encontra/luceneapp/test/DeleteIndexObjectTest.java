@@ -16,7 +16,7 @@ import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
 /**
- * Test the creation of an ImageObject (with the underlying Document from Lucene)
+ * Delete an indexobject from a LuceneIndex.
  * @author ricardo
  */
 public class DeleteIndexObjectTest extends TestCase {
@@ -26,7 +26,7 @@ public class DeleteIndexObjectTest extends TestCase {
     public static class D1 extends SimpleDescriptor{
         @Override
         public double getDistance(Descriptor other) {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
+            return 0;
         }
     }
 
@@ -36,7 +36,7 @@ public class DeleteIndexObjectTest extends TestCase {
         protected TestObject setupIndexedObject(D1 descriptor, TestObject object) {
             object.setId(Integer.parseInt(descriptor.getId().toString()));
             object.setValue(descriptor.getValue());
-            return object;  //To change body of implemented methods use File | Settings | File Templates.
+            return object;
         }
 
         @Override
@@ -95,6 +95,5 @@ public class DeleteIndexObjectTest extends TestCase {
         queryObject.setId(5);
 
         assert (e.remove(queryObject) == true);
-
     }
 }
