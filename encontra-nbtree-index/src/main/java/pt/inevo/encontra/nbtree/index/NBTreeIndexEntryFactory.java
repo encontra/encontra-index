@@ -7,6 +7,11 @@ import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.IndexEntryFactory;
 import pt.inevo.encontra.storage.IEntry;
 
+/**
+ * Factory for creating the entries in the NBTree indexing structure.
+ * @author Ricardo
+ * @param <O>
+ */
 public class NBTreeIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O, NBTreeIndexEntry> {
 
     public NBTreeIndexEntryFactory(Class objectClass) {
@@ -23,7 +28,6 @@ public class NBTreeIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
             try {
                 origin = (Descriptor) objectClass.newInstance();
 
-                //TO DO - this must be removed from here?
                 if (desc instanceof CompositeDescriptor){
                     CompositeDescriptor d = (CompositeDescriptor)origin;
                     List<Descriptor> newDescriptors = new ArrayList<Descriptor>();

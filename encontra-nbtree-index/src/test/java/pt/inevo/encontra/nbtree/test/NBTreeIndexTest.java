@@ -4,9 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import javax.imageio.ImageIO;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
@@ -31,203 +29,10 @@ import pt.inevo.encontra.storage.*;
  */
 public class NBTreeIndexTest extends TestCase {
 
-    public class SerializableBufferedImage implements Serializable {
-
-        public int width;
-        public int height;
-        public int[] pixels;
-        private static final long serialVersionUID = 7526472295622776147L;
-
-        public SerializableBufferedImage() {
-            width = 0;
-            height = 0;
-        }
-
-        public SerializableBufferedImage(int width, int height, int[] pixels) {
-            this.width = width;
-            this.height = height;
-            this.pixels = pixels;
-        }
-
-        public SerializableBufferedImage(BufferedImage image) {
-            this.width = image.getWidth();
-            this.height = image.getHeight();
-            this.pixels = new int[width * height];
-            image.getRGB(0, 0, width, height, pixels, 0, width);
-        }
-
-        public BufferedImage getBufferedImage() {
-            if (pixels == null) {
-                width = 1;
-                height = 1;
-                pixels = new int[1];
-                pixels[0] = 128;
-            }
-            BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-            image.setRGB(0, 0, getWidth(), getHeight(), getPixels(), 0, getWidth());
-            return image;
-        }
-
-        /**
-         * @return the width
-         */
-        public int getWidth() {
-            return width;
-        }
-
-        /**
-         * @param width the width to set
-         */
-        public void setWidth(int width) {
-            this.width = width;
-        }
-
-        /**
-         * @return the height
-         */
-        public int getHeight() {
-            return height;
-        }
-
-        /**
-         * @param height the height to set
-         */
-        public void setHeight(int height) {
-            this.height = height;
-        }
-
-        /**
-         * @return the pixels
-         */
-        public int[] getPixels() {
-            return pixels;
-        }
-
-        /**
-         * @param pixels the pixels to set
-         */
-        public void setPixels(int[] pixels) {
-            this.pixels = pixels;
-        }
-    }
-
-    public static class FileUtil {
-
-        private static boolean hasExtension(File f, String[] extensions) {
-            int sz = extensions.length;
-            String ext;
-            String name = f.getName();
-            for (int i = 0; i < sz; i++) {
-                ext = (String) extensions[i];
-                if (name.endsWith(ext)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public static List<File> findFilesRecursively(File directory, String[] extensions) {
-            List<File> list = new ArrayList<File>();
-            if (directory.isFile()) {
-                if (hasExtension(directory, extensions)) {
-                    list.add(directory);
-                }
-                return list;
-            }
-            addFilesRecursevely(list, directory, extensions);
-            return list;
-        }
-
-        private static void addFilesRecursevely(List<File> found, File rootDir, String[] extensions) {
-            if (rootDir == null) {
-                return; // we do not want waste time
-            }
-            File[] files = rootDir.listFiles();
-            if (files == null) {
-                return;
-            }
-            for (int i = 0; i < files.length; i++) {
-                File file = new File(rootDir, files[i].getName());
-                if (file.isDirectory()) {
-                    addFilesRecursevely(found, file, extensions);
-                } else {
-                    if (hasExtension(files[i], extensions)) {
-                        found.add(file);
-                    }
-                }
-            }
-        }
-    }
-
-    public static class ImageModelLoader implements Iterable<File> {
-
-        protected String imagesPath = "";
-        protected static Long idCount = 0l;
-        protected List<File> imagesFiles;
-
-        public ImageModelLoader() {
-        }
-
-        public ImageModelLoader(String imagesPath) {
-            this.imagesPath = imagesPath;
-        }
-
-        public static ImageModel loadImage(File image) {
-
-            //for now only sets the filename
-            ImageModel im = new ImageModel(image.getAbsolutePath(), "", null);
-            im.setId(idCount++);
-
-            //get the description
-            //TO DO - load the description from here
-            im.setDescription("Description: " + image.getAbsolutePath());
-
-            //get the bufferedimage
-            try {
-                BufferedImage bufImg = ImageIO.read(image);
-                im.setImage(bufImg);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            return im;
-        }
-
-        public List<ImageModel> getImages(String path) {
-            File root = new File(path);
-            String[] extensions = {"jpg", "png"};
-
-            List<File> imageFiles = FileUtil.findFilesRecursively(root, extensions);
-            List<ImageModel> images = new ArrayList<ImageModel>();
-
-            for (File f : imageFiles) {
-                images.add(loadImage(f));
-            }
-
-            return images;
-        }
-
-        public void load(String path) {
-            File root = new File(path);
-            String[] extensions = {"jpg", "png"};
-
-            imagesFiles = FileUtil.findFilesRecursively(root, extensions);
-        }
-
-        public void load() {
-            load(imagesPath);
-        }
-
-        public List<ImageModel> getImages() {
-            return getImages(imagesPath);
-        }
-
-        @Override
-        public Iterator<File> iterator() {
-            return imagesFiles.iterator();
-        }
-    }
-
+    /**
+     * Simple searcher for images, using a NBTreeSearcher.
+     * @param <O>
+     */
     public class SimpleImageSearcher<O extends IndexedObject> extends NBTreeSearcher<O> {
 
         @Override
@@ -248,6 +53,10 @@ public class NBTreeIndexTest extends TestCase {
         }
     }
 
+    /**
+     * Simple textual searcher for the description and filename of the ImageModel
+     * @param <O>
+     */
     public class SimpleTextSearcher<O extends IndexedObject> extends SimpleSearcher<O> {
 
         @Override
@@ -314,21 +123,15 @@ public class NBTreeIndexTest extends TestCase {
         imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>());
         //using a BTreeIndex
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
-        //using a SimpleIndex
-        //imageSearcher.setIndex(new SimpleIndex(ColorLayoutDescriptor.class));
 
-//        searcher.addSearcher("filename", filenameSearcher);
-//        searcher.addSearcher("description", descriptionSearcher);
+        searcher.addSearcher("filename", filenameSearcher);
+        searcher.addSearcher("description", descriptionSearcher);
         searcher.addSearcher("image", imageSearcher);
 
         e.setSearcher(searcher);
 
         System.out.println("Loading some objects to the test indexes...");
-//        ImageModelLoader loader = new ImageModelLoader("./src/test/resources/parts");
-//        ImageModelLoader loader = new ImageModelLoader("./src/test/resources/DailyDrawings");
-        ImageModelLoader loader = new ImageModelLoader("./src/test/resources/additional_images");
-//        List<ImageModel> images = loader.getImages("./src/test/resources/additional_images");
-//        List<ImageModel> images = loader.getImages("./src/test/resources/DailyDrawings");
+        ImageModelLoader loader = new ImageModelLoader("C:\\Users\\Ricardo\\Desktop\\testcases\\test\\additional_images");
         loader.load();
         Iterator<File> it = loader.iterator();
 
@@ -336,19 +139,11 @@ public class NBTreeIndexTest extends TestCase {
             File f = it.next();
             ImageModel im = loader.loadImage(f);
             e.insert(im);
-//            if (i % 20 == 0){
-//                long v = Runtime.getRuntime().freeMemory();
-//                System.out.print("Value before: " + v);
-//                Runtime.getRuntime().gc();
-//                v = Runtime.getRuntime().freeMemory();
-//                System.out.println("Value after gc: " + v);
-//            }
         }
 
         try {
             System.out.println("Creating a knn query...");
-//            BufferedImage image = ImageIO.read(new File("./src/test/resources/query.jpg"));
-            BufferedImage image = ImageIO.read(new File("./src/test/resources/28004.jpg"));
+            BufferedImage image = ImageIO.read(new File("C:\\Users\\Ricardo\\Desktop\\testcases\\28\\28004.jpg"));
 
             Query knnQuery = new KnnQuery(new IndexedObject<Serializable, BufferedImage>(28004, image), 10);
             System.out.println("Searching for elements in the engine...");

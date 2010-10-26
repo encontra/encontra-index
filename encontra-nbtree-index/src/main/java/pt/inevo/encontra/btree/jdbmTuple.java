@@ -4,6 +4,11 @@ import java.io.Serializable;
 import jdbm.helper.Tuple;
 import pt.inevo.encontra.index.IndexEntry;
 
+/**
+ * Tuple implementation using the jdbm library.
+ * @author Ricardo
+ * @param <O>
+ */
 public class jdbmTuple<O extends IndexEntry<? extends Serializable, ? extends Serializable>> implements ITuple<O> {
 
     private Tuple tuple;

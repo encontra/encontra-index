@@ -6,6 +6,11 @@ import jdbm.helper.Tuple;
 import jdbm.helper.TupleBrowser;
 import pt.inevo.encontra.index.IndexEntry;
 
+/**
+ * Tuple Browser using the jdbm library.
+ * @author Ricardo
+ * @param <O>
+ */
 public class jdbmTupleBrowser<O extends IndexEntry<? extends Serializable, ? extends Serializable>> implements ITupleBrowser<O> {
 
     private TupleBrowser browser;

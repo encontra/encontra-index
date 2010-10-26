@@ -13,6 +13,11 @@ import jdbm.recman.CacheRecordManager;
 import pt.inevo.encontra.btree.comparators.NumberComparator;
 import pt.inevo.encontra.index.IndexEntry;
 
+/**
+ * BTree implementation using the jdbm library.
+ * @author Ricardo
+ * @param <O>
+ */
 public class jdbmBTree<O extends IndexEntry & Serializable> implements IBTree<O> {
 
     private RecordManager recman;

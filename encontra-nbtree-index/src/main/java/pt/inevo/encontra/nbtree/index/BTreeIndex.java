@@ -12,6 +12,12 @@ import pt.inevo.encontra.index.IndexEntry;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
+/**
+ * Generic Index using a BTree as the indexing structure.
+ * Uses the implemented jdbmBTree.
+ * @author Ricardo
+ * @param <E>
+ */
 public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
 
     protected IBTree index;

@@ -15,6 +15,12 @@ import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
+/**
+ * NBTree searcher. Searches in the underlying B+Tree using the NBTree
+ * searching solution.
+ * @author Ricardo
+ * @param <O>
+ */
 public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
 
     protected DescriptorExtractor extractor;
@@ -92,20 +98,6 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
 
         ResultSet resultSet = new ResultSet<Descriptor>();
         DescriptorList results = new DescriptorList(maxHits, d);
-
-        //linear knn search, start from the beginning
-//        index.begin();
-//        while (index.hasNext()) {
-//            Descriptor p = index.getNext();
-//            if (!results.contains(p)) {
-//                //insert only if it doesn't already exists
-//                if (!results.addDescriptor(p)) {
-//                    /*we are not improving the results going
-//                    this way, so stop the search*/
-//                    break;
-//                }
-//            }
-//        }
         
         //two way knn - one way
         index.setCursor(d);
@@ -140,7 +132,7 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
             result.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
             resultSet.add(result);
         }
-        //IS THIS NECESSARY
+        
         resultSet.normalizeScores();
         resultSet.invertScores(); // This is a distance (dissimilarity) and we need similarity
 

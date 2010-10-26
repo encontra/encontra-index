@@ -1,8 +1,13 @@
 package pt.inevo.encontra.btree;
 
-import java.io.Serializable;
 import pt.inevo.encontra.index.IndexEntry;
 
+/**
+ * Generic interface for the Tuple Browser. An object that allows to browse
+ * through the tuples.
+ * @author Ricardo
+ * @param <O>
+ */
 public interface ITupleBrowser<O extends IndexEntry> {
 
     /**
