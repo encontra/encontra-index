@@ -12,6 +12,7 @@ import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
@@ -68,12 +69,13 @@ public class DeleteIndexObjectTest extends TestCase {
         EntityStorage storage = new SimpleObjectStorage(TestObject.class);
 
         Engine<TestObject> e = new SimpleEngine<TestObject>();
+        e.setQueryProcessor(new QueryProcessorDefaultImpl());
         LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("luceneDelete",TestObject.class);
         SimpleSearcher searcher = new SimpleSearcher();
         searcher.setIndex(index);
         searcher.setObjectStorage(storage);
         
-        e.setSearcher(searcher);
+        e.getQueryProcessor().setSearcher(TestObject.class.getName(), searcher);
         e.setObjectStorage(storage);
        
         LuceneIndexEntryFactory<D1> entryFactory=new LuceneIndexEntryFactory<D1>(D1.class);

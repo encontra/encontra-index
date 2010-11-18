@@ -1,17 +1,17 @@
 package pt.inevo.encontra.nbtree.index;
 
+import java.util.Stack;
 import pt.inevo.encontra.btree.DescriptorList;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.Index;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
-import pt.inevo.encontra.index.search.Searcher;
-import pt.inevo.encontra.query.KnnQuery;
+import pt.inevo.encontra.index.search.AbstractSearcher;
+import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
-import pt.inevo.encontra.query.Query.QueryType;
-import pt.inevo.encontra.storage.EntityStorage;
+import pt.inevo.encontra.query.QueryParserNode;
+import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -21,11 +21,9 @@ import pt.inevo.encontra.storage.IEntry;
  * @author Ricardo
  * @param <O>
  */
-public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
+public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     protected DescriptorExtractor extractor;
-    protected Index<Descriptor> index;
-    protected EntityStorage storage;
 
     public void setDescriptorExtractor(DescriptorExtractor extractor) {
         this.extractor = extractor;
@@ -33,37 +31,6 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
 
     public DescriptorExtractor getDescriptorExtractor() {
         return extractor;
-    }
-
-    public void setIndex(Index index) {
-        this.index = index;
-    }
-
-    public Index getIndex() {
-        return index;
-    }
-
-    @Override
-    public void setObjectStorage(EntityStorage storage) {
-        this.storage = storage;
-    }
-
-    @Override
-    public EntityStorage getObjectStorage() {
-        return storage;
-    }
-
-    @Override
-    public QueryType[] getSupportedQueryTypes() {
-        return new QueryType[]{QueryType.KNN};
-    }
-
-    @Override
-    public boolean supportsQueryType(QueryType type) {
-        if (type.equals(QueryType.KNN)) {
-            return true;
-        }
-        return false;
     }
 
     @Override
@@ -83,11 +50,19 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
     @Override
     public ResultSet<O> search(Query query) {
         ResultSet<IEntry> results = new ResultSet<IEntry>();
-        if (supportsQueryType(query.getType())) {
-            if (query.getType().equals(Query.QueryType.KNN)) {
-                KnnQuery q = (KnnQuery) query;
-                Descriptor d = getDescriptorExtractor().extract((IndexedObject) q.getQuery());
-                results = performKnnQuery(d, q.getKnn());
+
+        if (query instanceof CriteriaQuery) {
+
+            CriteriaQuery q = (CriteriaQuery) query;
+            if (q.getRestriction().getClass().equals(Similar.class)) {
+                Stack<QueryParserNode> nodes = queryProcessor.getQueryParser().parse(query);
+                //can only process simple queries: similar, equals, etc.
+                if (nodes.firstElement().predicateType.equals(Similar.class)) {
+                    Descriptor d = getDescriptorExtractor().extract(nodes.firstElement().fieldObject);
+                    results = performKnnQuery(d, 10);
+                }
+            } else {
+                return getResultObjects(queryProcessor.search(query));
             }
         }
 
@@ -139,18 +114,8 @@ public class NBTreeSearcher<O extends IEntity> implements Searcher<O> {
         return resultSet;
     }
 
+    @Override
     protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResult()));
-    }
-
-    protected ResultSet<O> getResultObjects(ResultSet<IEntry> indexEntryResultSet) {
-        ResultSet<O> results = new ResultSet<O>();
-
-        for (Result entryResult : indexEntryResultSet) {
-            Result r = getResultObject(entryResult);
-            r.setSimilarity(entryResult.getSimilarity());
-            results.add(r);
-        }
-        return results;
     }
 }

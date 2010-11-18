@@ -14,11 +14,12 @@ import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
-import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
-import pt.inevo.encontra.query.KnnQuery;
-import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.Path;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
@@ -98,7 +99,8 @@ public class SearchLuceneIndexCompositeDesTest extends TestCase {
         EntityStorage storage = new SimpleObjectStorage(TestObject.class);
 
         Engine<TestObject> e = new SimpleEngine<TestObject>();
-        LuceneIndex<TestObject> index =new LuceneIndex<TestObject>("luceneSearch",TestObject.class);
+        e.setQueryProcessor(new QueryProcessorDefaultImpl());
+        LuceneIndex<TestObject> index =new LuceneIndex<TestObject>("luceneSearchComposite",TestObject.class);
 
         SimpleSearcher searcher = new SimpleSearcher();
         searcher.setIndex(index);
@@ -109,7 +111,7 @@ public class SearchLuceneIndexCompositeDesTest extends TestCase {
         compositeDescriptorExtractor.addExtractor(new D2Extractor(), 1);
 
         searcher.setDescriptorExtractor(compositeDescriptorExtractor);
-        e.setSearcher(searcher);
+        e.getQueryProcessor().setSearcher(TestObject.class.getName(), searcher);
         e.setObjectStorage(storage);
        
         LuceneIndexEntryFactory<CompositeDescriptor> entryFactory =new LuceneIndexEntryFactory<CompositeDescriptor>(CompositeDescriptor.class);
@@ -127,11 +129,20 @@ public class SearchLuceneIndexCompositeDesTest extends TestCase {
         TestObject queryObject = new TestObject();
         queryObject.setId(101);
 
-        Query knnQuery = new KnnQuery(queryObject, 10);
-        ResultSet<TestObject> results = e.search(knnQuery);
-        System.out.println("The results for this query are: ");
-        for (Result<TestObject> r : results){
-            System.out.println(r.getResult());
-        }
+        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+        CriteriaQuery<TestObject> criteriaQuery = cb.createQuery(TestObject.class);
+
+        //Create the Model/Attributes Path
+        Path<TestObject> model = criteriaQuery.from(TestObject.class);
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(cb.similar(model, queryObject));
+
+        // TODO - perform the call to e.search and printout the results
+//        ResultSet<TestObject> results = e.search(query);
+//        System.out.println("The results for this query are: ");
+//        for (Result<TestObject> r : results){
+//            System.out.println(r.getResult());
+//        }
     }
 }

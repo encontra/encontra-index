@@ -12,11 +12,12 @@ import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
-import pt.inevo.encontra.index.search.SimpleCombinedSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
-import pt.inevo.encontra.query.KnnQuery;
-import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.Path;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
@@ -96,10 +97,11 @@ public class SearchLuceneIndexesTest extends TestCase {
         EntityStorage storage = new SimpleObjectStorage(TestObject.class);
 
         Engine<TestObject> e = new SimpleEngine<TestObject>();
+        e.setQueryProcessor(new QueryProcessorDefaultImpl());
+
         LuceneIndex<TestObject> indexD1 =new LuceneIndex<TestObject>("luceneSearchD1",TestObject.class);
         LuceneIndex<TestObject> indexD2 =new LuceneIndex<TestObject>("luceneSearchD2",TestObject.class);
-        SimpleCombinedSearcher searcher = new SimpleCombinedSearcher();
-        searcher.setObjectStorage(storage);
+        e.setObjectStorage(storage);
 
         SimpleSearcher d1Searcher = new SimpleSearcher();
         d1Searcher.setDescriptorExtractor(new D1Extractor());
@@ -109,11 +111,8 @@ public class SearchLuceneIndexesTest extends TestCase {
         d2Searcher.setDescriptorExtractor(new D2Extractor());
         d2Searcher.setIndex(indexD2);
 
-        searcher.addSearcher("d1", d1Searcher);
-        searcher.addSearcher("d2", d2Searcher);
-
-        e.setSearcher(searcher);
-        e.setObjectStorage(storage);
+        e.getQueryProcessor().setSearcher("d1", d1Searcher);
+        e.getQueryProcessor().setSearcher("d2", d2Searcher);
        
         LuceneIndexEntryFactory<D1> entryFactoryD1 =new LuceneIndexEntryFactory<D1>(D1.class);
         indexD1.setEntryFactory(entryFactoryD1);
@@ -133,11 +132,20 @@ public class SearchLuceneIndexesTest extends TestCase {
         TestObject queryObject = new TestObject();
         queryObject.setId(101);
 
-        Query knnQuery = new KnnQuery(queryObject, 10);
-        ResultSet<TestObject> results = e.search(knnQuery);
-        System.out.println("The results for this query are: ");
-        for (Result<TestObject> r : results){
-            System.out.println(r.getResult());
-        }
+        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+        CriteriaQuery<TestObject> criteriaQuery = cb.createQuery(TestObject.class);
+
+        //Create the Model/Attributes Path
+        Path<TestObject> model = criteriaQuery.from(TestObject.class);
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(cb.similar(model, queryObject));
+
+        // TODO perform the call to e.search
+//        ResultSet<TestObject> results = e.search(query);
+//        System.out.println("The results for this query are: ");
+//        for (Result<TestObject> r : results){
+//            System.out.println(r.getResult());
+//        }
     }
 }
