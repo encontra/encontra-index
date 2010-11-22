@@ -8,7 +8,6 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
-import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
@@ -68,7 +67,7 @@ public class DeleteIndexObjectTest extends TestCase {
 
         EntityStorage storage = new SimpleObjectStorage(TestObject.class);
 
-        Engine<TestObject> e = new SimpleEngine<TestObject>();
+        SimpleEngine<TestObject> e = new SimpleEngine<TestObject>();
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
         LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("luceneDelete",TestObject.class);
         SimpleSearcher searcher = new SimpleSearcher();

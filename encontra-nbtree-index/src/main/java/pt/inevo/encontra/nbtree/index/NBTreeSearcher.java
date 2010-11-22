@@ -55,10 +55,10 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
             CriteriaQuery q = (CriteriaQuery) query;
             if (q.getRestriction().getClass().equals(Similar.class)) {
-                Stack<QueryParserNode> nodes = queryProcessor.getQueryParser().parse(query);
+                QueryParserNode nodes = queryProcessor.getQueryParser().parse(query);
                 //can only process simple queries: similar, equals, etc.
-                if (nodes.firstElement().predicateType.equals(Similar.class)) {
-                    Descriptor d = getDescriptorExtractor().extract(nodes.firstElement().fieldObject);
+                if (nodes.predicateType.equals(Similar.class)) {
+                    Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, nodes.fieldObject));
                     results = performKnnQuery(d, 10);
                 }
             } else {

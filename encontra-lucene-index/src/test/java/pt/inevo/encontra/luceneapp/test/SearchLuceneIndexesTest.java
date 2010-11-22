@@ -8,7 +8,6 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
-import pt.inevo.encontra.engine.Engine;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
@@ -96,7 +95,7 @@ public class SearchLuceneIndexesTest extends TestCase {
     public void testMain() throws FileNotFoundException {
         EntityStorage storage = new SimpleObjectStorage(TestObject.class);
 
-        Engine<TestObject> e = new SimpleEngine<TestObject>();
+        SimpleEngine<TestObject> e = new SimpleEngine<TestObject>();
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
 
         LuceneIndex<TestObject> indexD1 =new LuceneIndex<TestObject>("luceneSearchD1",TestObject.class);
