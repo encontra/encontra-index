@@ -3,21 +3,23 @@ package pt.inevo.encontra.luceneapp.test;
 import java.io.FileNotFoundException;
 
 import junit.framework.TestCase;
-import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.IndexedObject;
+import org.junit.Test;
 import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
+import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
+import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
-import pt.inevo.encontra.storage.EntityStorage;
+import pt.inevo.encontra.storage.IEntity;
+import pt.inevo.encontra.storage.IEntry;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
 /**
@@ -26,33 +28,14 @@ import pt.inevo.encontra.storage.SimpleObjectStorage;
  */
 public class SearchLuceneIndexTest extends TestCase {
 
-    public static class TestObject extends IndexedObject<Integer,String> {}
+    class LuceneEngine<O extends IEntity> extends AbstractSearcher<O> {
 
-    public static class D1 extends SimpleDescriptor{
-        @Override
-        public double getDistance(Descriptor other) {
-            return 0;
-        }
+    @Override
+    protected Result<O> getResultObject(Result<IEntry> entryresult) {
+        return new Result<O>((O) storage.get(
+                Long.parseLong((String) entryresult.getResult().getId())));
     }
-
-    public static class D1Extractor extends DescriptorExtractor<TestObject,D1> {
-
-        @Override
-        protected TestObject setupIndexedObject(D1 descriptor, TestObject object) {
-            object.setId(Integer.parseInt(descriptor.getId().toString()));
-            object.setValue(descriptor.getValue());
-            return object;
-        }
-
-        @Override
-        public D1 extract(TestObject object) {
-            D1 d = new D1();
-            d.setId(object.getId());
-            d.setValue("It works!");
-            return d;
-        }
-
-    }
+}
 
     public SearchLuceneIndexTest(String testName) {
         super(testName);
@@ -68,52 +51,48 @@ public class SearchLuceneIndexTest extends TestCase {
         super.tearDown();
     }
 
+    @Test
     public void testMain() throws FileNotFoundException {
 
-        EntityStorage storage = new SimpleObjectStorage(TestObject.class);
-
-        SimpleEngine<TestObject> e = new SimpleEngine<TestObject>();
+        LuceneEngine<ObjectModel> e = new LuceneEngine<ObjectModel>();
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
-        LuceneIndex<TestObject> index=new LuceneIndex<TestObject>("luceneSearch",TestObject.class);
+        e.setObjectStorage(new SimpleObjectStorage(ObjectModel.class));
+        e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+
+        LuceneIndex index = new LuceneIndex("luceneSearch", SimpleDescriptor.class);
         SimpleSearcher searcher = new SimpleSearcher();
         searcher.setIndex(index);
-        searcher.setObjectStorage(storage);
-        
-        e.getQueryProcessor().setSearcher(TestObject.class.getName(), searcher);
-        e.setObjectStorage(storage);
-       
-        LuceneIndexEntryFactory<D1> entryFactory=new LuceneIndexEntryFactory<D1>(D1.class);
+
+        LuceneIndexEntryFactory<SimpleDescriptor> entryFactory = new LuceneIndexEntryFactory<SimpleDescriptor>(SimpleDescriptor.class);
         index.setEntryFactory(entryFactory);
 
-        DescriptorExtractor<TestObject, D1> d=new D1Extractor();
+        SimpleDescriptorExtractor d = new SimpleDescriptorExtractor(SimpleDescriptor.class);
         searcher.setDescriptorExtractor(d);
 
+        e.getQueryProcessor().setSearcher("content", searcher);
+
         //inserting some objects in the index
-        for (int i= 1 ; i < 10 ; i++){
-            TestObject object = new TestObject();
-            object.setId(i);
-            object.setValue("Does it work? Event number " + i);
+        for (int i = 1; i < 10; i++) {
+            ObjectModel object = new ObjectModel("object" + i);
             e.insert(object);
         }
 
         //performing the query
-        TestObject queryObject = new TestObject();
-        queryObject.setId(101);
+        ObjectModel queryObject = new ObjectModel("object1");
+        queryObject.setId(Long.MIN_VALUE);
 
         CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
-        CriteriaQuery<TestObject> criteriaQuery = cb.createQuery(TestObject.class);
+        CriteriaQuery<ObjectModel> criteriaQuery = cb.createQuery(ObjectModel.class);
 
         //Create the Model/Attributes Path
-        Path<TestObject> model = criteriaQuery.from(TestObject.class);
-
+        Path<ObjectModel> model = criteriaQuery.from(ObjectModel.class);
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(cb.similar(model, queryObject));
 
-        // TODO - perform the call to e.search
-//        ResultSet<TestObject> results = e.search(query);
-//        System.out.println("The results for this query are: ");
-//        for (Result<TestObject> r : results){
-//            System.out.println(r.getResult());
-//        }
+        ResultSet<ObjectModel> results = e.search(query);
+        System.out.println("The results for this query are: ");
+        for (Result<ObjectModel> r : results) {
+            System.out.println(r.getResult());
+        }
     }
 }
