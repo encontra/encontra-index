@@ -8,6 +8,10 @@ public class ObjectModel implements IEntity<Long> {
     private Long id;
     private String content;
 
+    public ObjectModel() {
+        this("");
+    }
+
     public ObjectModel(String content) {
         this.content = content;
     }

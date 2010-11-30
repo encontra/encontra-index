@@ -7,7 +7,6 @@ import org.junit.Test;
 import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
-import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
