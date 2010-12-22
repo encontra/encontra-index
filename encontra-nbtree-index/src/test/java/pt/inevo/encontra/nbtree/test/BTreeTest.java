@@ -38,7 +38,7 @@ public class BTreeTest {
     @Test
     public void test() {
         System.out.println("Testing the jdbmBTree...");
-        IBTree<EntityTestObject> btree = new jdbmBTree<EntityTestObject>(EntityTestObject.class);
+        IBTree<EntityTestObject> btree = new jdbmBTree<EntityTestObject>("btreeTest",EntityTestObject.class);
 
         System.out.println("Adding some elements to the BTree");
         for (double i = 0; i < 10; i++) {
@@ -95,6 +95,18 @@ public class BTreeTest {
             tuple = browser.getPrevious();
         }
 
+        btree.close();
+
         System.out.println("Final size: " + btree.size());
+    }
+
+    @Test
+    public void testLoad() {
+        System.out.println("TestLoad");
+        IBTree<EntityTestObject> btree = new jdbmBTree<EntityTestObject>("btreeTest",EntityTestObject.class);
+        ITupleBrowser<EntityTestObject> browser = btree.browse();
+        while (browser.getNext() != null) {
+            System.out.println("Loaded");
+        }
     }
 }

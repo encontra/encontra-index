@@ -8,6 +8,7 @@ import javax.imageio.ImageIO;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import junit.framework.TestCase;
+import org.junit.Test;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
@@ -39,8 +40,8 @@ public class NBTreeIndexTest extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-
-    public void testMain() {
+    
+    public void testSave() {
         //Creating the EntityStorage for saving the objects
         EntityStorage storage = new SimpleObjectStorage(ImageModel.class);
 

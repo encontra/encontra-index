@@ -7,6 +7,7 @@ public class StringDescriptor extends SimpleDescriptor {
 
     public StringDescriptor() {
         super();
+        super.setValue("");
     }
 
     @Override

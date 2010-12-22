@@ -3,13 +3,11 @@ package pt.inevo.encontra.btree;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Properties;
 import java.util.Random;
 import jdbm.RecordManager;
 import jdbm.RecordManagerFactory;
 import jdbm.btree.BTree;
-import jdbm.helper.CachePolicy;
-import jdbm.helper.SoftCache;
-import jdbm.recman.CacheRecordManager;
 import pt.inevo.encontra.btree.comparators.NumberComparator;
 import pt.inevo.encontra.index.IndexEntry;
 
@@ -22,31 +20,23 @@ public class jdbmBTree<O extends IndexEntry & Serializable> implements IBTree<O>
 
     private RecordManager recman;
     private BTree btree;
-    private CachePolicy cache;
 
     public jdbmBTree(Class entryClass) {
         this("RM" + new Random().nextInt(), entryClass);
     }
 
     /**
-     * Uses a default Double Comparator
+     * Uses a default Number Comparator
      * @param path
      */
     public jdbmBTree(String path, Class entryClass) {
-        try {
-            cache = new SoftCache();
-            recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
-            btree = BTree.createInstance(recman, new NumberComparator());
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        this(path, entryClass, new NumberComparator());
     }
 
     //must specify a comparator for the objects
     public jdbmBTree(String path, Class entryClass, Comparator comparator) {
         try {
-            cache = new SoftCache();
-            recman = new CacheRecordManager(RecordManagerFactory.createRecordManager(path), cache);
+            recman = RecordManagerFactory.createRecordManager(path, new Properties());
 
             long recid = recman.getNamedObject(path);
             if (recid != 0) { //reload the btree
@@ -64,6 +54,15 @@ public class jdbmBTree<O extends IndexEntry & Serializable> implements IBTree<O>
     @Override
     public int size() {
         return btree.size();
+    }
+
+    @Override
+    public void close() {
+        try {
+            recman.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override

@@ -28,6 +28,11 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
         this.setEntryFactory(new NBTreeIndexEntryFactory(objectClass));
     }
 
+    public BTreeIndex(String path, Class objectClass) {
+        index = new jdbmBTree(path, NBTreeIndexEntry.class);
+        this.setEntryFactory(new NBTreeIndexEntryFactory(objectClass));
+    }
+
     @Override
     public boolean insert(E entry) {
         NBTreeIndexEntry indexEntry = (NBTreeIndexEntry) getEntryFactory().createIndexEntry(entry);
@@ -43,6 +48,10 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E>  {
     @Override
     public int size() {
         return index.size();
+    }
+
+    public void close() {
+        index.close();
     }
 
     @Override

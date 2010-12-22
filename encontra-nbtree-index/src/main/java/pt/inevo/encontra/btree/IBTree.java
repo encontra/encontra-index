@@ -14,7 +14,7 @@ public interface IBTree<O extends IndexEntry & Serializable> {
      * @param entry
      * @return
      */
-    public abstract boolean insert(O entry);
+    public boolean insert(O entry);
 
     /**
      *
@@ -28,6 +28,11 @@ public interface IBTree<O extends IndexEntry & Serializable> {
      * @return
      */
     public abstract int size();
+
+    /**
+     * 
+     */
+    public void close();
 
     /**
      *
