@@ -3,6 +3,7 @@ package pt.inevo.encontra.nbtree.index;
 import pt.inevo.encontra.btree.DescriptorList;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
@@ -70,10 +71,12 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         ResultSet resultSet = new ResultSet<Descriptor>();
         DescriptorList results = new DescriptorList(maxHits, d);
 
+        EntryProvider<Descriptor> provider = index.getEntryProvider();
+
         //two way knn - one way
-        index.setCursor(d);
-        while (index.hasNext()) {
-            Descriptor p = index.getNext();
+        provider.setCursor(d);
+        while (provider.hasNext()) {
+            Descriptor p = provider.getNext();
             if (!results.contains(p)) {
                 //insert only if it doesn't already exists
                 if (!results.addDescriptor(p)) {
@@ -85,9 +88,9 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         }
 
         //two way knn - other way
-        index.setCursor(d);
-        while (index.hasPrevious()) {
-            Descriptor p = index.getPrevious();
+        provider.setCursor(d);
+        while (provider.hasPrevious()) {
+            Descriptor p = provider.getPrevious();
             if (!results.contains(p)) {
                 //insert only if it doesn't already exists
                 if (!results.addDescriptor(p)) {
