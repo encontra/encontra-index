@@ -8,7 +8,6 @@ import javax.imageio.ImageIO;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import junit.framework.TestCase;
-import org.junit.Test;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
@@ -80,7 +79,7 @@ public class NBTreeIndexTest extends TestCase {
         e.getQueryProcessor().setSearcher("image", imageSearcher);
 
         System.out.println("Loading some objects to the test indexes...");
-        ImageModelLoader loader = new ImageModelLoader("C:\\Users\\Ricardo\\Desktop\\testcases\\test\\additional_images");
+        ImageModelLoader loader = new ImageModelLoader("C:\\Users\\Ricardo\\Desktop\\testcases\\test\\database\\additional_images\\27");
         loader.load();
         Iterator<File> it = loader.iterator();
 

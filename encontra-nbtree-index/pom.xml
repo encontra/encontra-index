@@ -37,6 +37,11 @@
             <scope>test</scope>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>se.scalablesolutions.akka</groupId>
+            <artifactId>akka-actor</artifactId>
+            <version>1.0-RC1</version>
+        </dependency>
     </dependencies>
 </project>
 

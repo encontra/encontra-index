@@ -1,5 +1,6 @@
 package pt.inevo.encontra.btree;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.util.SortedSet;
@@ -7,7 +8,7 @@ import java.util.TreeSet;
 import pt.inevo.encontra.descriptors.Descriptor;
 
 /**
- * Object that holds a list of Descriptors, as the result to a KNN query.
+ * Object that holds a list of Descriptors, as the result to a query.
  * Descriptors are ordered by the distance to the query provided.
  * @author Ricardo
  */
@@ -23,7 +24,7 @@ public class DescriptorList implements Iterable<Descriptor> {
         this.seedP = seedPoint;
         this.size = size;
 
-        sortedPoints = new TreeSet<Descriptor>(new Comparator<Descriptor>() {
+        sortedPoints = Collections.synchronizedSortedSet(new TreeSet<Descriptor>(new Comparator<Descriptor>() {
 
             @Override
             public int compare(Descriptor o1, Descriptor o2) {
@@ -42,30 +43,32 @@ public class DescriptorList implements Iterable<Descriptor> {
                     return 0;
                 }
             }
-        });
+        }));
     }
 
     /**
-     * Add a NBPoint to the list.
-     * @param point
+     * Add a descriptor to the list.
+     * @param descriptor the descriptor to be added
      */
-    public boolean addDescriptor(Descriptor point) {
+    public boolean addDescriptor(Descriptor descriptor) {
         try {
-            if (sortedPoints.size() < size) {
-                sortedPoints.add(point);
-                farPoint = sortedPoints.last();
-                farDistance = seedP.getDistance(farPoint);
-                return true;
-            } else {
-                double distance = seedP.getDistance(point);
-                if (distance >= farDistance) {
-                    return false;
-                } else {
-                    sortedPoints.remove(farPoint);
-                    sortedPoints.add(point);
+            synchronized (sortedPoints) {
+                if (sortedPoints.size() < size) {
+                    sortedPoints.add(descriptor);
                     farPoint = sortedPoints.last();
                     farDistance = seedP.getDistance(farPoint);
                     return true;
+                } else {
+                    double distance = seedP.getDistance(descriptor);
+                    if (distance >= farDistance) {
+                        return false;
+                    } else {
+                        sortedPoints.remove(farPoint);
+                        sortedPoints.add(descriptor);
+                        farPoint = sortedPoints.last();
+                        farDistance = seedP.getDistance(farPoint);
+                        return true;
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -80,7 +83,11 @@ public class DescriptorList implements Iterable<Descriptor> {
      * @return
      */
     public boolean contains(Descriptor point) {
-        return sortedPoints.contains(point);
+        boolean contains;
+        synchronized (sortedPoints) {
+            contains = sortedPoints.contains(point);
+        }
+        return contains;
     }
 
     /**
@@ -88,19 +95,21 @@ public class DescriptorList implements Iterable<Descriptor> {
      * @param point
      */
     public void removeDescriptor(Descriptor point) {
-        if (sortedPoints.contains(point)) {
-            sortedPoints.remove(point);
-            if (sortedPoints.size() > 0) {
-                farPoint = sortedPoints.last();
-                try {
-                    farDistance = seedP.getDistance(farPoint);
-                } catch (Exception ex) {
-                    System.out.println("[Error]: Problem when calculating the "
-                            + "distance between points. Possible reason: " + ex.toString());
+        synchronized (sortedPoints) {
+            if (sortedPoints.contains(point)) {
+                sortedPoints.remove(point);
+                if (sortedPoints.size() > 0) {
+                    farPoint = sortedPoints.last();
+                    try {
+                        farDistance = seedP.getDistance(farPoint);
+                    } catch (Exception ex) {
+                        System.out.println("[Error]: Problem when calculating the "
+                                + "distance between points. Possible reason: " + ex.toString());
+                    }
+                } else {
+                    farPoint = null;
+                    farDistance = 0;
                 }
-            } else {
-                farPoint = null;
-                farDistance = 0;
             }
         }
     }
@@ -119,7 +128,11 @@ public class DescriptorList implements Iterable<Descriptor> {
      */
     @Override
     public Iterator<Descriptor> iterator() {
-        return sortedPoints.iterator();
+        Iterator<Descriptor> it;
+        synchronized(sortedPoints){
+            it = sortedPoints.iterator();
+        }
+        return it;
     }
 
     /**
@@ -127,6 +140,10 @@ public class DescriptorList implements Iterable<Descriptor> {
      * @return
      */
     public int getSize() {
-        return sortedPoints.size();
+        int s;
+        synchronized(sortedPoints){
+            s = sortedPoints.size();
+        }
+        return s;
     }
 }
