@@ -6,6 +6,7 @@ import akka.actor.UntypedActorFactory;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
@@ -15,12 +16,14 @@ import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.index.search.AbstractSearcher;
+import pt.inevo.encontra.index.search.ResultsProvider;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
+import scala.Option;
 
 /**
  * NBTree searcher. Searches in the underlying B+Tree using the NBTree
@@ -32,7 +35,110 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     protected DescriptorExtractor extractor;
     protected List<ActorRef> searchActors;
-    protected DescriptorList resultList;
+
+    class NBTreeResultsProvider implements ResultsProvider<O> {
+
+        private String iteratorType;
+        private Descriptor queryDescriptor;
+        private DescriptorList iteratorList;
+        private Iterator<Descriptor> resultIt;
+        private ActorRef searchCoordinator;
+
+        NBTreeResultsProvider(String queryType, Descriptor d) {
+            this.iteratorType = queryType;
+            this.queryDescriptor = d;
+
+            setIteratorList(false);
+        }
+
+        private void setIteratorList(boolean previousSearch) {
+            if (searchCoordinator == null) {
+                searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
+
+                    @Override
+                    public UntypedActor create() {
+                        return new NBTreeSearchCoordinator();
+                    }
+                });
+            }
+            searchCoordinator.start();
+
+            Message m = new Message();
+            m.operation = "SEARCH";
+            m.obj = queryDescriptor;
+            m.howMany = 20;
+            m.previousSearch = previousSearch;
+
+            Future future = searchCoordinator.sendRequestReplyFuture(m, Long.MAX_VALUE, null);
+            future.await();
+
+            if (future.isCompleted()) {
+                Option resultOption = future.result();
+                if (resultOption.isDefined()) {
+                    //everything is ok, so the results were retrieved
+                    Object result = resultOption.get();
+                    if (!(result instanceof DescriptorList)) {
+                        System.out.println("Processor returned results with wrong type.");
+                    } else {
+                        iteratorList = (DescriptorList) result;
+                        resultIt = iteratorList.iterator();
+                    }
+                } else {
+                    System.out.println("Processor didn't return a result.");
+                }
+            }
+        }
+
+        @Override
+        public Result<O> getNext() {
+            if (iteratorType.equals("SIMILAR")) {
+                if (!resultIt.hasNext()) {
+                    int oldSize = iteratorList.getSize();
+                    setIteratorList(true);
+                    resultIt = iteratorList.iterator();
+                    for (int i = 0; i < oldSize && resultIt.hasNext(); i++) {
+                        resultIt.next();
+                    }
+                }
+                if (resultIt.hasNext()) {
+                    Descriptor descr = resultIt.next();
+                    Result<Descriptor> result = new Result<Descriptor>(descr);
+                    result.setSimilarity(descr.getDistance(queryDescriptor)); // TODO - This is distance not similarity!!!
+
+                    Result<O> r = new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) result.getResult()));
+                    r.setSimilarity(result.getSimilarity());
+                    return r;
+                } else {
+                    return null;
+                }
+            } else {
+                //must be carefull so this null doesn't pop out
+                return null;
+            }
+        }
+
+        @Override
+        public List<Result<O>> getNext(int next) {
+            return null;
+        }
+    }
+
+    @Override
+    public ResultsProvider<O> getResultsProvider(Query query) {
+        if (query instanceof CriteriaQuery) {
+            //parse the query
+            QueryParserNode node = queryProcessor.getQueryParser().parse(query);
+            //make the query
+            if (node.predicateType.equals(Similar.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                return new NBTreeResultsProvider("SIMILAR", d);
+            } else {
+                //we are not supporting any other
+                return null;
+            }
+        }
+        return null;
+    }
 
     public NBTreeSearcher() {
         searchActors = new ArrayList<ActorRef>();
@@ -80,8 +186,11 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     class Message {
+
         public String operation;
         public Object obj;
+        public int howMany;
+        public boolean previousSearch;
     }
 
     class NBTreeSearchCoordinator extends UntypedActor {
@@ -90,11 +199,18 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected ActorRef leftSearchActor, rightSearchActor;
+        protected DescriptorList resultDescriptor;
+        protected Descriptor leftDescriptor, rightDescriptor;
 
         NBTreeSearchCoordinator() {
             //initialize the two searchers, each one with a different provider
+            initSearchActors();
+        }
+
+        private void initSearchActors() {
             final EntryProvider<Descriptor> provider = index.getEntryProvider();
             leftSearchActor = UntypedActor.actorOf(new UntypedActorFactory() {
+
                 @Override
                 public UntypedActor create() {
                     return new NBTreeSearchActor(provider);
@@ -103,6 +219,7 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
             final EntryProvider<Descriptor> provider2 = index.getEntryProvider();
             rightSearchActor = UntypedActor.actorOf(new UntypedActorFactory() {
+
                 @Override
                 public UntypedActor create() {
                     return new NBTreeSearchActor(provider2);
@@ -115,6 +232,13 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
             Message message = (Message) o;
             if (message.operation.equals("SEARCH")) {
                 count = 0;
+                if (message.previousSearch) {
+                    resultDescriptor.setMaxSize(resultDescriptor.getSize() * 2);
+                    initSearchActors();
+                } else {
+                    resultDescriptor = new DescriptorList(message.howMany, (Descriptor) message.obj);
+                }
+
                 if (getContext().getSenderFuture().isDefined()) {
                     future = (CompletableFuture) getContext().getSenderFuture().get();
                 } else if (getContext().getSender().isDefined()) {
@@ -124,6 +248,9 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 Message goLeft = new Message();
                 goLeft.operation = "GOLEFT";
                 goLeft.obj = message.obj;
+                if (message.previousSearch) {
+                    goLeft.obj = leftDescriptor;
+                }
 
                 leftSearchActor.start();
                 leftSearchActor.sendOneWay(goLeft, getContext());
@@ -131,17 +258,44 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 Message goRight = new Message();
                 goRight.operation = "GORIGHT";
                 goRight.obj = message.obj;
+                if (message.previousSearch) {
+                    goRight.obj = rightDescriptor;
+                }
 
                 rightSearchActor.start();
                 rightSearchActor.sendOneWay(goRight, getContext());
-            } else if (message.operation.equals("FINISHED")) {
-                count++;
-                if (count == 2) {
-                    if (originalActor != null) {
-                        originalActor.sendOneWay(true);
+            } else if (message.operation.equals("RESULT")) {
+                Descriptor desc = (Descriptor) message.obj;
+                //keep track of the last descriptor sent by the actor
+                if (getContext().getSender().get().equals(leftSearchActor)) {
+                    leftDescriptor = desc;
+                } else {
+                    rightDescriptor = desc;
+                }
+                if (!resultDescriptor.contains(desc)) {
+                    //insert only if it doesn't already exists
+                    if (!resultDescriptor.addDescriptor(desc)) {
+                        //just don't ask for many results from here
+                        count++;
                     } else {
-                        future.completeWithResult(true);
+                        Message getNext = new Message();
+                        getNext.operation = "NEXT";
+                        if (getContext().getSender().get().equals(leftSearchActor)) {
+                            leftSearchActor.sendOneWay(getNext, getContext());
+                        } else {
+                            rightSearchActor.sendOneWay(getNext, getContext());
+                        }
                     }
+                }
+            } else if (message.operation.equals("EMPTY")) {
+                count++;
+            }
+
+            if (count >= 2) {
+                if (originalActor != null) {
+                    originalActor.sendOneWay(resultDescriptor);
+                } else {
+                    future.completeWithResult(resultDescriptor);
                 }
             }
         }
@@ -150,9 +304,39 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
     class NBTreeSearchActor extends UntypedActor {
 
         protected EntryProvider<Descriptor> provider;
+        protected Descriptor lastDescriptor;
+        protected String direction;
 
         NBTreeSearchActor(EntryProvider<Descriptor> provider) {
             this.provider = provider;
+        }
+
+        private void sendPrevious() {
+            Descriptor p = null;
+            Message answer = new Message();
+            if (provider.hasPrevious()) {
+                p = provider.getPrevious();
+                answer.operation = "RESULT";
+                answer.obj = p;
+                lastDescriptor = p;
+            } else {
+                answer.operation = "EMPTY";
+            }
+            getContext().replySafe(answer);
+        }
+
+        private void sendNext() {
+            Descriptor p = null;
+            Message answer = new Message();
+            if (provider.hasNext()) {
+                p = provider.getNext();
+                answer.operation = "RESULT";
+                answer.obj = p;
+                lastDescriptor = p;
+            } else {
+                answer.operation = "EMPTY";
+            }
+            getContext().replySafe(answer);
         }
 
         @Override
@@ -160,45 +344,28 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
             Message message = (Message) o;
             Descriptor cursor = (Descriptor) message.obj;
             if (message.operation.equals("GOLEFT")) {
+                this.direction = message.operation;
                 provider.setCursor(cursor);
-                while (provider.hasNext()) {
-                    Descriptor p = provider.getNext();
-                    if (!resultList.contains(p)) {
-                        //insert only if it doesn't already exists
-                        if (!resultList.addDescriptor(p)) {
-                            /*we are not improving the resultList going
-                            this way, so stop the search*/
-                            break;
-                        }
-                    }
-                }
+                sendPrevious();
             } else if (message.operation.equals("GORIGHT")) {
+                this.direction = message.operation;
                 provider.setCursor(cursor);
-                while (provider.hasPrevious()) {
-                    Descriptor p = provider.getPrevious();
-                    if (!resultList.contains(p)) {
-                        //insert only if it doesn't already exists
-                        if (!resultList.addDescriptor(p)) {
-                            /*we are not improving the resultList going
-                            this way, so stop the search*/
-                            break;
-                        }
-                    }
+                sendNext();
+            } else if (message.operation.equals("NEXT")) {
+                if (direction.equals("GOLEFT")) {
+                    sendPrevious();
+                } else {
+                    sendNext();
                 }
             } else {
                 System.out.println("Don't know what to do!");
             }
-
-            Message m = new Message();
-            m.operation = "FINISHED";
-            getContext().replySafe(m);
         }
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
 
         ResultSet resultSet = new ResultSet<Descriptor>();
-        resultList = new DescriptorList(maxHits, d);
 
         ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
@@ -216,15 +383,28 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         future.await();
 
         if (future.isCompleted()) {
-            for (Descriptor descr : resultList.getDescriptors()) {
-                Result<Descriptor> result = new Result<Descriptor>(descr);
-                result.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
-                resultSet.add(result);
-            }
+            Option resultOption = future.result();
+            if (resultOption.isDefined()) {
+                //everything is ok, so the results were retrieved
+                Object result = resultOption.get();
+                if (!(result instanceof DescriptorList)) {
+                    System.out.println("Processor returned results with wrong type.");
+                } else {
+                    DescriptorList resultsList = (DescriptorList) result;
+                    for (Descriptor descr : resultsList.getDescriptors()) {
+                        Result<Descriptor> resDesc = new Result<Descriptor>(descr);
+                        resDesc.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
+                        resultSet.add(resDesc);
+                    }
 
-            resultSet.normalizeScores();
-            resultSet.invertScores(); // This is a distance (dissimilarity) and we need similarity
+                    resultSet.normalizeScores();
+                    resultSet.invertScores(); // This is a distance (dissimilarity) and we need similarity
+                }
+            } else {
+                System.out.println("Processor didn't return a result.");
+            }
         }
+
         return resultSet;
     }
 

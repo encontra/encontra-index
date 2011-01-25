@@ -52,6 +52,7 @@ public class NBTreeIndexTest extends TestCase {
         SimpleEngine<ImageModel> e = new SimpleEngine<ImageModel>();
         e.setObjectStorage(storage);
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        e.setQueryProcessor(new QueryProcessorParallelLinearImpl());
         e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //A searcher for the filename
@@ -59,12 +60,14 @@ public class NBTreeIndexTest extends TestCase {
         filenameSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         filenameSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
         filenameSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        filenameSearcher.setQueryProcessor(new QueryProcessorParallelLinearImpl());
 
         //A searcher for the description
         SimpleSearcher descriptionSearcher = new SimpleSearcher();
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
         descriptionSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        descriptionSearcher.setQueryProcessor(new QueryProcessorParallelLinearImpl());
 
         //A searcher for the image content (using only one type of descriptor
         NBTreeSearcher imageSearcher = new NBTreeSearcher();
@@ -73,6 +76,7 @@ public class NBTreeIndexTest extends TestCase {
         //using a BTreeIndex
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
         imageSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        imageSearcher.setQueryProcessor(new QueryProcessorParallelLinearImpl());
 
         e.getQueryProcessor().setSearcher("filename", filenameSearcher);
         e.getQueryProcessor().setSearcher("description", descriptionSearcher);
