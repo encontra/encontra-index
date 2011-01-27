@@ -13,8 +13,8 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.DescriptorList;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.index.Result;
-import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.index.ResultSetDefaultImp;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.ResultsProvider;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -26,7 +26,7 @@ import pt.inevo.encontra.storage.IEntry;
 import scala.Option;
 
 /**
- * NBTree searcher. Searches in the underlying B+Tree using the NBTree
+ * NBTree searcher. Searches in the underlying B+TreeIndex using the NBTree Approach.
  * searching solution.
  * @author Ricardo
  * @param <O>
@@ -103,10 +103,10 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 if (resultIt.hasNext()) {
                     Descriptor descr = resultIt.next();
                     Result<Descriptor> result = new Result<Descriptor>(descr);
-                    result.setSimilarity(descr.getDistance(queryDescriptor)); // TODO - This is distance not similarity!!!
+                    result.setScore(descr.getDistance(queryDescriptor)); // TODO - This is distance not similarity!!!
 
-                    Result<O> r = new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) result.getResult()));
-                    r.setSimilarity(result.getSimilarity());
+                    Result<O> r = new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) result.getResultObject()));
+                    r.setScore(result.getScore());
                     return r;
                 } else {
                     return null;
@@ -167,8 +167,8 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    public ResultSet<O> search(Query query) {
-        ResultSet<IEntry> results = new ResultSet<IEntry>();
+    public ResultSetDefaultImp<O> search(Query query) {
+        ResultSetDefaultImp<IEntry> results = new ResultSetDefaultImp<IEntry>();
 
         if (query instanceof CriteriaQuery) {
             QueryParserNode node = queryProcessor.getQueryParser().parse(query);
@@ -363,9 +363,9 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         }
     }
 
-    protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
+    protected ResultSetDefaultImp<IEntry> performKnnQuery(Descriptor d, int maxHits) {
 
-        ResultSet resultSet = new ResultSet<Descriptor>();
+        ResultSetDefaultImp resultSet = new ResultSetDefaultImp<Descriptor>();
 
         ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
@@ -393,7 +393,7 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                     DescriptorList resultsList = (DescriptorList) result;
                     for (Descriptor descr : resultsList.getDescriptors()) {
                         Result<Descriptor> resDesc = new Result<Descriptor>(descr);
-                        resDesc.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
+                        resDesc.setScore(descr.getDistance(d)); // TODO - This is distance not similarity!!!
                         resultSet.add(resDesc);
                     }
 
@@ -410,6 +410,6 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     @Override
     protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
-        return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResult()));
+        return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
     }
 }

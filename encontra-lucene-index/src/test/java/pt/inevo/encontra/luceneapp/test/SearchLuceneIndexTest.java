@@ -8,8 +8,8 @@ import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.index.Result;
-import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.index.ResultSetDefaultImp;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
@@ -32,7 +32,7 @@ public class SearchLuceneIndexTest extends TestCase {
     @Override
     protected Result<O> getResultObject(Result<IEntry> entryresult) {
         return new Result<O>((O) storage.get(
-                Long.parseLong((String) entryresult.getResult().getId())));
+                Long.parseLong((String) entryresult.getResultObject().getId())));
     }
 }
 
@@ -88,10 +88,10 @@ public class SearchLuceneIndexTest extends TestCase {
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(cb.similar(model, queryObject));
 
-        ResultSet<ObjectModel> results = e.search(query);
+        ResultSetDefaultImp<ObjectModel> results = e.search(query);
         System.out.println("The results for this query are: ");
         for (Result<ObjectModel> r : results) {
-            System.out.println(r.getResult());
+            System.out.println(r.getResultObject());
         }
     }
 }

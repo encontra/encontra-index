@@ -1,5 +1,6 @@
 package pt.inevo.encontra.nbtree.test;
 
+import pt.inevo.encontra.common.Result;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -102,12 +103,12 @@ public class NBTreeIndexTest extends TestCase {
             Path imagePath = query.from(ImageModel.class).get("image");
             query = query.where(cb.similar(imagePath, image));
 
-            ResultSet<ImageModel> results = e.search(query);
+            ResultSetDefaultImp<ImageModel> results = e.search(query);
 
             System.out.println("Number of retrieved elements: " + results.size());
             for (Result<ImageModel> r : results) {
-                System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-                System.out.println("Similarity: " + r.getSimilarity());
+                System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
+                System.out.println("Similarity: " + r.getScore());
             }
         } catch (IOException ex) {
             System.out.println("[Error] Couldn't load the query image. Possible reason: " + ex.getMessage());
