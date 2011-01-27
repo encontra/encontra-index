@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import junit.framework.TestCase;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
@@ -103,9 +104,9 @@ public class NBTreeIndexTest extends TestCase {
             Path imagePath = query.from(ImageModel.class).get("image");
             query = query.where(cb.similar(imagePath, image));
 
-            ResultSetDefaultImp<ImageModel> results = e.search(query);
+            ResultSet<ImageModel> results = e.search(query);
 
-            System.out.println("Number of retrieved elements: " + results.size());
+            System.out.println("Number of retrieved elements: " + results.getSize());
             for (Result<ImageModel> r : results) {
                 System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
                 System.out.println("Similarity: " + r.getScore());

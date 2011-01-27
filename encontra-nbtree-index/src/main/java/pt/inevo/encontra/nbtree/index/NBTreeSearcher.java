@@ -10,11 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.descriptors.DescriptorList;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.index.ResultSetDefaultImp;
+import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.ResultsProvider;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -40,8 +40,8 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         private String iteratorType;
         private Descriptor queryDescriptor;
-        private DescriptorList iteratorList;
-        private Iterator<Descriptor> resultIt;
+        private ResultSet<Descriptor> iteratorList;
+        private Iterator<Result<Descriptor>> resultIt;
         private ActorRef searchCoordinator;
 
         NBTreeResultsProvider(String queryType, Descriptor d) {
@@ -77,10 +77,10 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 if (resultOption.isDefined()) {
                     //everything is ok, so the results were retrieved
                     Object result = resultOption.get();
-                    if (!(result instanceof DescriptorList)) {
+                    if (!(result instanceof ResultSet)) {
                         System.out.println("Processor returned results with wrong type.");
                     } else {
-                        iteratorList = (DescriptorList) result;
+                        iteratorList = (ResultSet) result;
                         resultIt = iteratorList.iterator();
                     }
                 } else {
@@ -101,7 +101,7 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                     }
                 }
                 if (resultIt.hasNext()) {
-                    Descriptor descr = resultIt.next();
+                    Descriptor descr = resultIt.next().getResultObject();
                     Result<Descriptor> result = new Result<Descriptor>(descr);
                     result.setScore(descr.getDistance(queryDescriptor)); // TODO - This is distance not similarity!!!
 
@@ -167,21 +167,20 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    public ResultSetDefaultImp<O> search(Query query) {
-        ResultSetDefaultImp<IEntry> results = new ResultSetDefaultImp<IEntry>();
+    public ResultSet<O> search(Query query) {
+        ResultSet<IEntry> results = new ResultSetDefaultImpl<IEntry>();
 
         if (query instanceof CriteriaQuery) {
             QueryParserNode node = queryProcessor.getQueryParser().parse(query);
             if (node.predicateType.equals(Similar.class)) {
                 //can only process simple queries: similar, equals, etc.
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, 10);
+                results = performKnnQuery(d, 20);   //here we are retrieving 20 results, but user can control this
             } else {
                 return getResultObjects(queryProcessor.search(query));
             }
         }
 
-        results.sort();
         return getResultObjects(results);
     }
 
@@ -199,8 +198,8 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected ActorRef leftSearchActor, rightSearchActor;
-        protected DescriptorList resultDescriptor;
-        protected Descriptor leftDescriptor, rightDescriptor;
+        protected ResultSet<Descriptor> resultDescriptor;
+        protected Descriptor leftDescriptor, rightDescriptor, queryDescriptor;
 
         NBTreeSearchCoordinator() {
             //initialize the two searchers, each one with a different provider
@@ -232,11 +231,13 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
             Message message = (Message) o;
             if (message.operation.equals("SEARCH")) {
                 count = 0;
+                queryDescriptor = (Descriptor)message.obj;
                 if (message.previousSearch) {
                     resultDescriptor.setMaxSize(resultDescriptor.getSize() * 2);
                     initSearchActors();
                 } else {
-                    resultDescriptor = new DescriptorList(message.howMany, (Descriptor) message.obj);
+                    Result r = new Result((Descriptor)message.obj);
+                    resultDescriptor = new ResultSetDefaultImpl<Descriptor>(r, message.howMany);
                 }
 
                 if (getContext().getSenderFuture().isDefined()) {
@@ -272,9 +273,11 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 } else {
                     rightDescriptor = desc;
                 }
-                if (!resultDescriptor.contains(desc)) {
+                if (!resultDescriptor.containsResultObject(desc)) {
                     //insert only if it doesn't already exists
-                    if (!resultDescriptor.addDescriptor(desc)) {
+                    Result r = new Result(desc);
+                    r.setScore(desc.getDistance(queryDescriptor));
+                    if (!resultDescriptor.add(r)) {
                         //just don't ask for many results from here
                         count++;
                     } else {
@@ -363,9 +366,9 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         }
     }
 
-    protected ResultSetDefaultImp<IEntry> performKnnQuery(Descriptor d, int maxHits) {
+    protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
 
-        ResultSetDefaultImp resultSet = new ResultSetDefaultImp<Descriptor>();
+        ResultSet resultSet = new ResultSetDefaultImpl<Descriptor>();
 
         ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
@@ -377,6 +380,7 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         Message m = new Message();
         m.operation = "SEARCH";
+        m.howMany = maxHits;
         m.obj = d;
 
         Future future = searchCoordinator.sendRequestReplyFuture(m, Long.MAX_VALUE, null);
@@ -387,14 +391,13 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
             if (resultOption.isDefined()) {
                 //everything is ok, so the results were retrieved
                 Object result = resultOption.get();
-                if (!(result instanceof DescriptorList)) {
+                if (!(result instanceof ResultSet)) {
                     System.out.println("Processor returned results with wrong type.");
                 } else {
-                    DescriptorList resultsList = (DescriptorList) result;
-                    for (Descriptor descr : resultsList.getDescriptors()) {
-                        Result<Descriptor> resDesc = new Result<Descriptor>(descr);
-                        resDesc.setScore(descr.getDistance(d)); // TODO - This is distance not similarity!!!
-                        resultSet.add(resDesc);
+                    ResultSet<Descriptor> resultsList = (ResultSet<Descriptor>) result;
+                    for (Result<Descriptor> descr : resultsList) {
+                        descr.setScore(descr.getResultObject().getDistance(d)); // TODO - This is distance not similarity!!!
+                        resultSet.add(descr);
                     }
 
                     resultSet.normalizeScores();

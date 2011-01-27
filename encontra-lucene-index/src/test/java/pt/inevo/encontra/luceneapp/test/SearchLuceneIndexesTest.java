@@ -3,14 +3,15 @@ package pt.inevo.encontra.luceneapp.test;
 import java.io.FileNotFoundException;
 
 import junit.framework.TestCase;
+import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.engine.SimpleEngine;
-import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.index.ResultSetDefaultImp;
+import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -97,6 +98,7 @@ public class SearchLuceneIndexesTest extends TestCase {
 
         SimpleEngine<TestObject> e = new SimpleEngine<TestObject>();
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
+        e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         LuceneIndex<TestObject> indexD1 =new LuceneIndex<TestObject>("luceneSearchD1",TestObject.class);
         LuceneIndex<TestObject> indexD2 =new LuceneIndex<TestObject>("luceneSearchD2",TestObject.class);
@@ -141,10 +143,10 @@ public class SearchLuceneIndexesTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(cb.similar(model, queryObject));
 
         // TODO perform the call to e.search
-//        ResultSetDefaultImp<TestObject> results = e.search(query);
-//        System.out.println("The results for this query are: ");
-//        for (Result<TestObject> r : results){
-//            System.out.println(r.getResult());
-//        }
+        ResultSet<TestObject> results = e.search(query);
+        System.out.println("The results for this query are: ");
+        for (Result<TestObject> r : results){
+            System.out.println(r.getResultObject());
+        }
     }
 }

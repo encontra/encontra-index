@@ -9,7 +9,7 @@ import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.index.ResultSetDefaultImp;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
@@ -88,7 +88,7 @@ public class SearchLuceneIndexTest extends TestCase {
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(cb.similar(model, queryObject));
 
-        ResultSetDefaultImp<ObjectModel> results = e.search(query);
+        ResultSet<ObjectModel> results = e.search(query);
         System.out.println("The results for this query are: ");
         for (Result<ObjectModel> r : results) {
             System.out.println(r.getResultObject());
