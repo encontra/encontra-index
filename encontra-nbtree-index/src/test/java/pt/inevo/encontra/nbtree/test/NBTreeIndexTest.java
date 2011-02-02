@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import javax.imageio.ImageIO;
+
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import junit.framework.TestCase;
@@ -17,6 +19,7 @@ import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.nbtree.index.BTreeIndex;
 import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
+import pt.inevo.encontra.nbtree.index.ParallelNBTreeSearcher;
 import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.*;
@@ -54,7 +57,6 @@ public class NBTreeIndexTest extends TestCase {
         SimpleEngine<ImageModel> e = new SimpleEngine<ImageModel>();
         e.setObjectStorage(storage);
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        e.setQueryProcessor(new QueryProcessorParallelLinearImpl());
         e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //A searcher for the filename
@@ -62,23 +64,24 @@ public class NBTreeIndexTest extends TestCase {
         filenameSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         filenameSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
         filenameSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        filenameSearcher.setQueryProcessor(new QueryProcessorParallelLinearImpl());
+        filenameSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the description
         SimpleSearcher descriptionSearcher = new SimpleSearcher();
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
         descriptionSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        descriptionSearcher.setQueryProcessor(new QueryProcessorParallelLinearImpl());
+        descriptionSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the image content (using only one type of descriptor
         NBTreeSearcher imageSearcher = new NBTreeSearcher();
+//        ParallelNBTreeSearcher imageSearcher = new ParallelNBTreeSearcher();
         //using a single descriptor
         imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>());
         //using a BTreeIndex
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
         imageSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        imageSearcher.setQueryProcessor(new QueryProcessorParallelLinearImpl());
+        imageSearcher.setResultProvider(new SyncResultProvider());
 
         e.getQueryProcessor().setSearcher("filename", filenameSearcher);
         e.getQueryProcessor().setSearcher("description", descriptionSearcher);
@@ -102,7 +105,7 @@ public class NBTreeIndexTest extends TestCase {
             CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
             CriteriaQuery<ImageModel> query = cb.createQuery(ImageModel.class);
             Path imagePath = query.from(ImageModel.class).get("image");
-            query = query.where(cb.similar(imagePath, image));
+            query = query.where(cb.similar(imagePath, image)).distinct(true).limit(20);
 
             ResultSet<ImageModel> results = e.search(query);
 

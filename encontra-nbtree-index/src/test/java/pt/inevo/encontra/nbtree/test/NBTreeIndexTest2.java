@@ -19,7 +19,7 @@ import pt.inevo.encontra.image.descriptors.ScalableColorDescriptor;
 import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.nbtree.index.BTreeIndex;
-import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
+import pt.inevo.encontra.nbtree.index.ParallelNBTreeSearcher;
 import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.*;
@@ -76,7 +76,7 @@ public class NBTreeIndexTest2 extends TestCase {
         compositeImageDescriptorExtractor.addExtractor(new ScalableColorDescriptor(), 1);
 
         //A searcher for the image content (using only one type of descriptor
-        NBTreeSearcher imageSearcher = new NBTreeSearcher();
+        ParallelNBTreeSearcher imageSearcher = new ParallelNBTreeSearcher();
         //using a composite descriptor
         imageSearcher.setDescriptorExtractor(compositeImageDescriptorExtractor);
         //using a BTreeIndex
