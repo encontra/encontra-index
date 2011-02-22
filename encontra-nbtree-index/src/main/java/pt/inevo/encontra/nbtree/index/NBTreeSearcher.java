@@ -8,6 +8,7 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.search.AbstractSearcher;
+import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
@@ -55,9 +56,9 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
         if (query instanceof CriteriaQuery) {
             QueryParserNode node = queryProcessor.getQueryParser().parse(query);
             if (node.predicateType.equals(Similar.class)) {
-                //can only process simple queries: similar, equals, etc.
+                //can only process similar queries
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, node.limit);
+                results = performKnnQuery(d, index.getEntryProvider().size());
             } else {
                 return getResultObjects(queryProcessor.search(query));
             }

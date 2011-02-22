@@ -5,8 +5,10 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.EntryProvider;
@@ -15,6 +17,7 @@ import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.index.search.AbstractSearcher;
+import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
@@ -26,16 +29,15 @@ import scala.Option;
 /**
  * NBTree searcher. Searches in the underlying B+TreeIndex using the NBTree Approach.
  * searching solution.
- * @author Ricardo
+ *
  * @param <O>
+ * @author Ricardo
  */
 public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     protected DescriptorExtractor extractor;
-    protected List<ActorRef> searchActors;
 
     public ParallelNBTreeSearcher() {
-        searchActors = new ArrayList<ActorRef>();
     }
 
     public void setDescriptorExtractor(DescriptorExtractor extractor) {
@@ -69,7 +71,7 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
             if (node.predicateType.equals(Similar.class)) {
                 //can only process simple queries: similar, equals, etc.
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, node.limit);   //here we are retrieving 20 results, but user can control this
+                results = performKnnQuery(d, index.getEntryProvider().size());
                 System.out.println();
             } else {
                 return getResultObjects(queryProcessor.search(query));
@@ -126,12 +128,12 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
         public void onReceive(Object o) throws Exception {
             Message message = (Message) o;
             if (message.operation.equals("SEARCH")) {
-                queryDescriptor = (Descriptor)message.obj;
+                queryDescriptor = (Descriptor) message.obj;
                 if (message.previousSearch) {
                     resultDescriptor.setMaxSize(resultDescriptor.getSize() * 2);
                     initSearchActors();
                 } else {
-                    Result r = new Result((Descriptor)message.obj);
+                    Result r = new Result((Descriptor) message.obj);
                     resultDescriptor = new ResultSetDefaultImpl<Descriptor>(r, message.howMany);
                     getResultProvider().setResultSet(resultDescriptor);
                 }
@@ -172,32 +174,37 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
                 } else {
                     rightDescriptor = desc;
                 }
-                if (!resultDescriptor.containsResultObject(desc)) {
+//                if (!resultDescriptor.containsResultObject(desc)) {
                     //insert only if it doesn't already exists
                     Result r = new Result(desc);
                     r.setScore(desc.getDistance(queryDescriptor));
-                    if (!resultDescriptor.add(r)) {
-                        //just don't ask for many results from here
-                        stopActors.add(sender);
-                    } else {
-                        Message getNext = new Message();
-                        getNext.operation = "NEXT";
-                        if (sender.equals(leftSearchActor)) {
-                            leftSearchActor.sendOneWay(getNext, getContext());
-                        } else {
-                            rightSearchActor.sendOneWay(getNext, getContext());
-                        }
-                    }
-                }
+
+                    resultDescriptor.add(r);
+
+//                    if (!resultDescriptor.add(r)) {
+//                        //just don't ask for many results from here
+//                        stopActors.add(sender);
+//                    } else {
+//                        Message getNext = new Message();
+//                        getNext.operation = "NEXT";
+//                        if (sender.equals(leftSearchActor)) {
+//                            leftSearchActor.sendOneWay(getNext, getContext());
+//                        } else {
+//                            rightSearchActor.sendOneWay(getNext, getContext());
+//                        }
+//                    }
+//                }
             } else if (message.operation.equals("EMPTY")) {
                 stopActors.add(getContext().getSender().get());
             }
 
             if (stopActors.size() >= 2) {
                 if (originalActor != null) {
-                    originalActor.sendOneWay(resultDescriptor.getCopy());
+//                    originalActor.sendOneWay(resultDescriptor.getCopy());
+                    originalActor.sendOneWay(resultDescriptor);
                 } else {
-                    future.completeWithResult(resultDescriptor.getCopy());
+//                    future.completeWithResult(resultDescriptor.getCopy());
+                    future.completeWithResult(resultDescriptor);
                 }
             }
         }
@@ -217,28 +224,31 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
         private void sendPrevious() {
             Descriptor p = null;
             Message answer = new Message();
-            if (provider.hasPrevious()) {
+            while (provider.hasPrevious()) {
+                answer = new Message();
                 p = provider.getPrevious();
                 answer.operation = "RESULT";
                 answer.obj = p;
                 lastDescriptor = p;
-            } else {
-                answer.operation = "EMPTY";
+                getContext().replySafe(answer);
             }
+            answer.operation = "EMPTY";
             getContext().replySafe(answer);
         }
 
         private void sendNext() {
             Descriptor p = null;
             Message answer = new Message();
-            if (provider.hasNext()) {
+            while (provider.hasNext()) {
+                answer = new Message();
                 p = provider.getNext();
                 answer.operation = "RESULT";
                 answer.obj = p;
                 lastDescriptor = p;
-            } else {
-                answer.operation = "EMPTY";
+                getContext().replySafe(answer);
             }
+
+            answer.operation = "EMPTY";
             getContext().replySafe(answer);
         }
 
@@ -296,12 +306,7 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
                 if (!(result instanceof ResultSet)) {
                     System.out.println("Processor returned results with wrong type.");
                 } else {
-                    ResultSet<Descriptor> resultsList = (ResultSet<Descriptor>) result;
-                    for (Result<Descriptor> descr : resultsList) {
-                        descr.setScore(descr.getResultObject().getDistance(d)); // TODO - This is distance not similarity!!!
-                        resultSet.add(descr);
-                    }
-
+                    resultSet = (ResultSet<Descriptor>) result;
                     resultSet.normalizeScores();
                     resultSet.invertScores(); // This is a distance (dissimilarity) and we need similarity
                 }

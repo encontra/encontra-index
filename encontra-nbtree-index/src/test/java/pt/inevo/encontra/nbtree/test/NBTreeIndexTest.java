@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import javax.imageio.ImageIO;
 
-import pt.inevo.encontra.common.SyncResultProvider;
+import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import junit.framework.TestCase;
@@ -19,7 +19,6 @@ import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.nbtree.index.BTreeIndex;
 import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
-import pt.inevo.encontra.nbtree.index.ParallelNBTreeSearcher;
 import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.*;
@@ -64,14 +63,14 @@ public class NBTreeIndexTest extends TestCase {
         filenameSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         filenameSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
         filenameSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-        filenameSearcher.setResultProvider(new SyncResultProvider());
+        filenameSearcher.setResultProvider(new DefaultResultProvider());
 
         //A searcher for the description
         SimpleSearcher descriptionSearcher = new SimpleSearcher();
         descriptionSearcher.setDescriptorExtractor(stringDescriptorExtractor);
         descriptionSearcher.setIndex(new SimpleIndex(StringDescriptor.class));
         descriptionSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-        descriptionSearcher.setResultProvider(new SyncResultProvider());
+        descriptionSearcher.setResultProvider(new DefaultResultProvider());
 
         //A searcher for the image content (using only one type of descriptor
         NBTreeSearcher imageSearcher = new NBTreeSearcher();
@@ -81,7 +80,7 @@ public class NBTreeIndexTest extends TestCase {
         //using a BTreeIndex
         imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
         imageSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-        imageSearcher.setResultProvider(new SyncResultProvider());
+        imageSearcher.setResultProvider(new DefaultResultProvider());
 
         e.getQueryProcessor().setSearcher("filename", filenameSearcher);
         e.getQueryProcessor().setSearcher("description", descriptionSearcher);
