@@ -28,8 +28,7 @@ import scala.Option;
 
 /**
  * NBTree searcher. Searches in the underlying B+TreeIndex using the NBTree Approach.
- * searching solution.
- *
+ * searching solution. This is a parallel version of the NBTree.
  * @param <O>
  * @author Ricardo
  */
@@ -164,46 +163,29 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
 
                 rightSearchActor.start();
                 rightSearchActor.sendOneWay(goRight, getContext());
-            } else if (message.operation.equals("RESULT")) {
+            } else if (message.operation.equals("RESULT") && stopActors.size() < 2) {
                 Descriptor desc = (Descriptor) message.obj;
+
                 //keep track of the last descriptor sent by the actor
                 ActorRef sender = getContext().getSender().get();
-
                 if (sender.equals(leftSearchActor)) {
                     leftDescriptor = desc;
                 } else {
                     rightDescriptor = desc;
                 }
-//                if (!resultDescriptor.containsResultObject(desc)) {
-                    //insert only if it doesn't already exists
-                    Result r = new Result(desc);
-                    r.setScore(desc.getDistance(queryDescriptor));
 
-                    resultDescriptor.add(r);
+                Result r = new Result(desc);
+                r.setScore(desc.getDistance(queryDescriptor));
 
-//                    if (!resultDescriptor.add(r)) {
-//                        //just don't ask for many results from here
-//                        stopActors.add(sender);
-//                    } else {
-//                        Message getNext = new Message();
-//                        getNext.operation = "NEXT";
-//                        if (sender.equals(leftSearchActor)) {
-//                            leftSearchActor.sendOneWay(getNext, getContext());
-//                        } else {
-//                            rightSearchActor.sendOneWay(getNext, getContext());
-//                        }
-//                    }
-//                }
+                resultDescriptor.add(r);
             } else if (message.operation.equals("EMPTY")) {
                 stopActors.add(getContext().getSender().get());
             }
 
             if (stopActors.size() >= 2) {
                 if (originalActor != null) {
-//                    originalActor.sendOneWay(resultDescriptor.getCopy());
                     originalActor.sendOneWay(resultDescriptor);
                 } else {
-//                    future.completeWithResult(resultDescriptor.getCopy());
                     future.completeWithResult(resultDescriptor);
                 }
             }
@@ -280,7 +262,6 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
 
         ResultSet resultSet = new ResultSetDefaultImpl<Descriptor>();
-
         ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
             @Override
