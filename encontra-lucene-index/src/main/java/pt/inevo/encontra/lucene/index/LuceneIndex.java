@@ -8,15 +8,12 @@ import java.util.List;
 
 import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.NoLockFactory;
@@ -103,8 +100,15 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
         public boolean setCursor(O entry) {
 
             LuceneIndexEntry indexEntry = (LuceneIndexEntry) getEntryFactory().createIndexEntry(entry);
-            Term t = new Term("IDENTIFIER", indexEntry.getValue().get("IDENTIFIER"));
-            TermQuery query = new TermQuery(t);
+
+            BooleanQuery query = new BooleanQuery();
+            for (Fieldable f: indexEntry.getValue().getFields()){
+                if (!f.name().equals("IDENTIFIER")){
+                    Term t = new Term(f.name(), f.stringValue());
+                    MultiTermQuery fuzzyQuery = new FuzzyQuery(t);
+                    query.add(fuzzyQuery, BooleanClause.Occur.SHOULD);
+                }
+            }
 
             Searcher searcher = new IndexSearcher(reader);
             try {
@@ -112,6 +116,7 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
                 if (docs.totalHits != 0) {
                     ScoreDoc[] sDocs = docs.scoreDocs;
                     iterator = sDocs[0].doc;
+                    return true;
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();

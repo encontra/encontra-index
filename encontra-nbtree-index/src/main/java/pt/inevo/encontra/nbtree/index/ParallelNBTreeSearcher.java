@@ -34,17 +34,7 @@ import scala.Option;
  */
 public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
-    protected DescriptorExtractor extractor;
-
     public ParallelNBTreeSearcher() {
-    }
-
-    public void setDescriptorExtractor(DescriptorExtractor extractor) {
-        this.extractor = extractor;
-    }
-
-    public DescriptorExtractor getDescriptorExtractor() {
-        return extractor;
     }
 
     @Override

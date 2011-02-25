@@ -7,6 +7,7 @@ import pt.inevo.encontra.index.IndexEntryFactory;
 import pt.inevo.encontra.storage.Entry;
 import pt.inevo.encontra.storage.IEntry;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class LuceneIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O, LuceneIndexEntry> {
@@ -56,7 +57,8 @@ public class LuceneIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
         fields.remove(idField);
 
         if (fields.size() == 1) { // Simple value
-            object.setValue(fields.get(0).stringValue());
+            IEntry value = new Entry(fields.get(0).name(), fields.get(0).stringValue());
+            object.setValue(value);
         } else {
             IEntry[] values = new IEntry[fields.size()];
             int i = 0;
