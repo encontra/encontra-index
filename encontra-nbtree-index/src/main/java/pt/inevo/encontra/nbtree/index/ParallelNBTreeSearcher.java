@@ -10,14 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.index.search.AbstractSearcher;
-import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
@@ -25,6 +23,8 @@ import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 import scala.Option;
+
+import javax.persistence.criteria.Expression;
 
 /**
  * NBTree searcher. Searches in the underlying B+TreeIndex using the NBTree Approach.
@@ -63,11 +63,11 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
                 results = performKnnQuery(d, index.getEntryProvider().size());
                 System.out.println();
             } else {
-                return getResultObjects(queryProcessor.search(query));
+                return getResultObjects(queryProcessor.search(query), null);
             }
         }
 
-        return getResultObjects(results);
+        return getResultObjects(results, null);
     }
 
     class Message {
@@ -290,7 +290,7 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
+    protected Result<O> getResultObject(Result<IEntry> indexEntryresult, String criteria) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
     }
 }

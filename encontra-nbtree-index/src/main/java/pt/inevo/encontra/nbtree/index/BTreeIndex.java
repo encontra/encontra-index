@@ -13,6 +13,9 @@ import pt.inevo.encontra.index.IndexEntry;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+
 /**
  * Generic Index using a BTree as the indexing structure.
  * Uses the implemented jdbmBTree.
@@ -172,7 +175,17 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
 
         IndexEntry ientry = index.find(id);
         IEntry entry = getEntryFactory().getObject(ientry);
-        //TO DO - must conver to the IEntity
+        //TO DO - must convert to the IEntity
+
+        return null;
+    }
+
+    @Override
+    public IEntity get(Serializable id, String criteria) {
+
+        IndexEntry ientry = index.find(id);
+        IEntry entry = getEntryFactory().getObject(ientry);
+        //TO DO - must convert to the IEntity
 
         return null;
     }

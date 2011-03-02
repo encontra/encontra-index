@@ -22,6 +22,9 @@ import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+
 public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements PersistentIndex<O> {
 
     protected String id;
@@ -305,6 +308,11 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
 
     @Override
     public IEntity get(Serializable id) {
+        return null;
+    }
+
+    @Override
+    public IEntity get(Serializable id, String criteria) {
         return null;
     }
 

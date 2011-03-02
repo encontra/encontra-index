@@ -21,6 +21,8 @@ import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
+import javax.persistence.criteria.Expression;
+
 /**
  * Test for searching through a LuceneIndex.
  * @author ricardo
@@ -29,12 +31,12 @@ public class SearchLuceneIndexTest extends TestCase {
 
     class LuceneEngine<O extends IEntity> extends AbstractSearcher<O> {
 
-    @Override
-    protected Result<O> getResultObject(Result<IEntry> entryresult) {
-        return new Result<O>((O) storage.get(
-                Long.parseLong((String) entryresult.getResultObject().getId())));
+        @Override
+        protected Result<O> getResultObject(Result<IEntry> entryresult, String criteria) {
+            return new Result<O>((O) storage.get(
+                    Long.parseLong((String) entryresult.getResultObject().getId())));
+        }
     }
-}
 
     public SearchLuceneIndexTest(String testName) {
         super(testName);

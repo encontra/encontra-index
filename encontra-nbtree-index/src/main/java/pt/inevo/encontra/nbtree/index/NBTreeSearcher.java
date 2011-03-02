@@ -8,13 +8,14 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.search.AbstractSearcher;
-import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
+
+import javax.persistence.criteria.Expression;
 
 /**
  * NBTree searcher. Searches in the underlying B+Tree using the NBTree
@@ -60,11 +61,11 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performKnnQuery(d, index.getEntryProvider().size());
             } else {
-                return getResultObjects(queryProcessor.search(query));
+                return getResultObjects(queryProcessor.search(query), null);
             }
         }
 
-        return getResultObjects(results);
+        return getResultObjects(results, null);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -109,7 +110,7 @@ public class NBTreeSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
+    protected Result<O> getResultObject(Result<IEntry> indexEntryresult, String criteria) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
     }
 }
