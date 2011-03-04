@@ -63,11 +63,11 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
                 results = performKnnQuery(d, index.getEntryProvider().size());
                 System.out.println();
             } else {
-                return getResultObjects(queryProcessor.search(query), null);
+                return getResultObjects(queryProcessor.search(query));
             }
         }
 
-        return getResultObjects(results, null);
+        return getResultObjects(results);
     }
 
     class Message {
@@ -153,23 +153,27 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
 
                 rightSearchActor.start();
                 rightSearchActor.sendOneWay(goRight, getContext());
-            } else if (message.operation.equals("RESULT") && stopActors.size() < 2) {
-                Descriptor desc = (Descriptor) message.obj;
-
+            } else if (message.operation.equals("RESULT")) {
                 //keep track of the last descriptor sent by the actor
                 ActorRef sender = getContext().getSender().get();
-                if (sender.equals(leftSearchActor)) {
-                    leftDescriptor = desc;
-                } else {
-                    rightDescriptor = desc;
+
+                if (!stopActors.contains(sender)){
+                    Descriptor desc = (Descriptor) message.obj;
+                    if (sender.equals(leftSearchActor)) {
+                        leftDescriptor = desc;
+                    } else {
+                        rightDescriptor = desc;
+                    }
+
+                    Result r = new Result(desc);
+                    r.setScore(desc.getDistance(queryDescriptor));
+
+                    resultDescriptor.add(r);
                 }
-
-                Result r = new Result(desc);
-                r.setScore(desc.getDistance(queryDescriptor));
-
-                resultDescriptor.add(r);
             } else if (message.operation.equals("EMPTY")) {
-                stopActors.add(getContext().getSender().get());
+                ActorRef actor = getContext().getSender().get();
+                if (!stopActors.contains(actor))
+                    stopActors.add(actor);
             }
 
             if (stopActors.size() >= 2) {
@@ -237,13 +241,8 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
                 this.direction = message.operation;
                 provider.setCursor(cursor);
                 sendNext();
-            } else if (message.operation.equals("NEXT")) {
-                if (direction.equals("GOLEFT")) {
-                    sendPrevious();
-                } else {
-                    sendNext();
-                }
-            } else {
+            }
+            else {
                 System.out.println("Don't know what to do!");
             }
         }
@@ -290,7 +289,7 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult, String criteria) {
+    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
     }
 }

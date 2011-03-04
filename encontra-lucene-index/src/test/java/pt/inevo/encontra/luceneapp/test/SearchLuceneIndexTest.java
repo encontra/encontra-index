@@ -32,7 +32,7 @@ public class SearchLuceneIndexTest extends TestCase {
     class LuceneEngine<O extends IEntity> extends AbstractSearcher<O> {
 
         @Override
-        protected Result<O> getResultObject(Result<IEntry> entryresult, String criteria) {
+        protected Result<O> getResultObject(Result<IEntry> entryresult) {
             return new Result<O>((O) storage.get(
                     Long.parseLong((String) entryresult.getResultObject().getId())));
         }

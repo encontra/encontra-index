@@ -19,6 +19,7 @@ import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.nbtree.index.BTreeIndex;
 import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
+import pt.inevo.encontra.nbtree.index.ParallelNBTreeSearcher;
 import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.*;

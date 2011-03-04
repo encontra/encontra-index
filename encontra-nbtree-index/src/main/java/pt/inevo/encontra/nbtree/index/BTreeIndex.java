@@ -10,6 +10,7 @@ import pt.inevo.encontra.btree.jdbmBTree;
 import pt.inevo.encontra.index.AbstractIndex;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexEntry;
+import pt.inevo.encontra.query.criteria.StorageCriteria;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -181,12 +182,12 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
     }
 
     @Override
-    public IEntity get(Serializable id, String criteria) {
+    public boolean validate(Serializable id, StorageCriteria criteria) {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-        IndexEntry ientry = index.find(id);
-        IEntry entry = getEntryFactory().getObject(ientry);
-        //TO DO - must convert to the IEntity
-
+    @Override
+    public List<Serializable> getValidIds(StorageCriteria criteria){
         return null;
     }
 

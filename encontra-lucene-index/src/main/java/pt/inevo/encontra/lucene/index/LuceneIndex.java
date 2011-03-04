@@ -19,6 +19,7 @@ import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.NoLockFactory;
 
 import pt.inevo.encontra.index.*;
+import pt.inevo.encontra.query.criteria.StorageCriteria;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -312,7 +313,12 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
     }
 
     @Override
-    public IEntity get(Serializable id, String criteria) {
+    public boolean validate(Serializable id, StorageCriteria criteria) {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List<Serializable> getValidIds(StorageCriteria criteria){
         return null;
     }
 
