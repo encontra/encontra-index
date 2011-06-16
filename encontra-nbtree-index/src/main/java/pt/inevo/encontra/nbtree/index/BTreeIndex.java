@@ -1,8 +1,5 @@
 package pt.inevo.encontra.nbtree.index;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import pt.inevo.encontra.btree.IBTree;
 import pt.inevo.encontra.btree.ITuple;
 import pt.inevo.encontra.btree.ITupleBrowser;
@@ -14,8 +11,9 @@ import pt.inevo.encontra.query.criteria.StorageCriteria;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generic Index using a BTree as the indexing structure.
@@ -142,6 +140,11 @@ public class BTreeIndex<E extends IEntry> extends AbstractIndex<E> {
 
     public BTreeIndex(Class objectClass) {
         index = new jdbmBTree(NBTreeIndexEntry.class);
+        this.setEntryFactory(new NBTreeIndexEntryFactory(objectClass));
+    }
+
+    public BTreeIndex(String path, String name, Class objectClass) {
+        index = new jdbmBTree(path, name, objectClass);
         this.setEntryFactory(new NBTreeIndexEntryFactory(objectClass));
     }
 
