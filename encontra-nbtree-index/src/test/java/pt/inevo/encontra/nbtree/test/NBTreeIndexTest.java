@@ -1,28 +1,31 @@
 package pt.inevo.encontra.nbtree.test;
 
+import junit.framework.TestCase;
+import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
+import pt.inevo.encontra.engine.SimpleEngine;
+import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
+import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
+import pt.inevo.encontra.index.IndexedObject;
+import pt.inevo.encontra.index.SimpleIndex;
+import pt.inevo.encontra.index.search.SimpleSearcher;
+import pt.inevo.encontra.nbtree.index.BTreeIndex;
+import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
+import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.Path;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
+import pt.inevo.encontra.storage.EntityStorage;
+import pt.inevo.encontra.storage.SimpleObjectStorage;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import javax.imageio.ImageIO;
-
-import pt.inevo.encontra.common.DefaultResultProvider;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.engine.SimpleEngine;
-import junit.framework.TestCase;
-import pt.inevo.encontra.common.ResultSet;
-import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
-import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
-import pt.inevo.encontra.index.*;
-import pt.inevo.encontra.index.search.SimpleSearcher;
-import pt.inevo.encontra.nbtree.index.BTreeIndex;
-import pt.inevo.encontra.nbtree.index.NBTreeSearcher;
-import pt.inevo.encontra.nbtree.index.ParallelNBTreeSearcher;
-import pt.inevo.encontra.query.*;
-import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
-import pt.inevo.encontra.storage.*;
 
 /**
  * Smoke test: testing the creation of a simple engine, two indexes and the
@@ -88,7 +91,7 @@ public class NBTreeIndexTest extends TestCase {
         e.getQueryProcessor().setSearcher("image", imageSearcher);
 
         System.out.println("Loading some objects to the test indexes...");
-        ImageModelLoader loader = new ImageModelLoader("C:\\Users\\Ricardo\\Desktop\\testcases\\test\\database\\additional_images\\27");
+        ImageModelLoader loader = new ImageModelLoader("D:\\work\\ColaDI\\testcases\\test\\database\\additional_images\\27");
         loader.load();
         Iterator<File> it = loader.iterator();
 
@@ -100,7 +103,7 @@ public class NBTreeIndexTest extends TestCase {
 
         try {
             System.out.println("Creating a knn query...");
-            BufferedImage image = ImageIO.read(new File("C:\\Users\\Ricardo\\Desktop\\testcases\\28\\28004.jpg"));
+            BufferedImage image = ImageIO.read(new File("D:\\work\\ColaDI\\testcases\\28\\28004.jpg"));
 
             CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
             CriteriaQuery<ImageModel> query = cb.createQuery(ImageModel.class);
