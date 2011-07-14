@@ -1,8 +1,5 @@
 package pt.inevo.encontra.nbtree.index;
 
-import java.util.ArrayList;
-import java.util.List;
-import pt.inevo.encontra.descriptors.CompositeDescriptor;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.IndexEntryFactory;
 import pt.inevo.encontra.storage.IEntry;
@@ -24,33 +21,34 @@ public class NBTreeIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
         if (object instanceof Descriptor) {
             //Get the Descriptor
             Descriptor desc = (Descriptor) object;
-            Descriptor origin;
-            try {
-                origin = (Descriptor) objectClass.newInstance();
+//            Descriptor origin;
+//            try {
+//                origin = (Descriptor) objectClass.newInstance();
+//
+//                if (desc instanceof CompositeDescriptor){
+//                    CompositeDescriptor d = (CompositeDescriptor)origin;
+//                    List<Descriptor> newDescriptors = new ArrayList<Descriptor>();
+//
+//                    for (Descriptor ds: ((CompositeDescriptor)desc).getDescriptors()){
+//                        newDescriptors.add(ds.getClass().newInstance());
+//                    }
+//                    d.setDescriptors(newDescriptors);
+//                }
 
-                if (desc instanceof CompositeDescriptor){
-                    CompositeDescriptor d = (CompositeDescriptor)origin;
-                    List<Descriptor> newDescriptors = new ArrayList<Descriptor>();
-
-                    for (Descriptor ds: ((CompositeDescriptor)desc).getDescriptors()){
-                        newDescriptors.add(ds.getClass().newInstance());
-                    }
-                    d.setDescriptors(newDescriptors);
-                }
-
-                double dist = desc.getDistance(origin);
+//                double dist = desc.getDistance(origin);
+                double dist = desc.getNorm();
 
                 //set the key and the value
                 entry.setKey(dist);
                 entry.setValue(desc);
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+//            } catch (InstantiationException e) {
+//                e.printStackTrace();
+//            } catch (IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
 
         } else {
-            //TO DO - check if this is correct
+            // TODO - check if this is correct
             entry.setKey(object.getId());
             try {
                 Descriptor desc = (Descriptor) objectClass.newInstance();

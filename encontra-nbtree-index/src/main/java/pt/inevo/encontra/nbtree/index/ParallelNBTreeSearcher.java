@@ -5,16 +5,12 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.index.EntryProvider;
-import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
+import pt.inevo.encontra.descriptors.Descriptor;
+import pt.inevo.encontra.index.EntryProvider;
+import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
@@ -24,7 +20,8 @@ import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 import scala.Option;
 
-import javax.persistence.criteria.Expression;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * NBTree searcher. Searches in the underlying B+TreeIndex using the NBTree Approach.
@@ -61,7 +58,6 @@ public class ParallelNBTreeSearcher<O extends IEntity> extends AbstractSearcher<
                 //can only process simple queries: similar, equals, etc.
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performKnnQuery(d, index.getEntryProvider().size());
-                System.out.println();
             } else {
                 return getResultObjects(queryProcessor.search(query));
             }
