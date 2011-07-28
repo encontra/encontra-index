@@ -1,18 +1,16 @@
 package pt.inevo.encontra.luceneapp.test;
 
-import java.io.FileNotFoundException;
-
 import junit.framework.TestCase;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
+import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.search.SimpleSearcher;
+import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
@@ -20,6 +18,8 @@ import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
+
+import java.io.FileNotFoundException;
 
 /**
  * Test for searching through a LuceneIndex.
@@ -98,7 +98,7 @@ public class SearchLuceneIndexesTest extends TestCase {
 
         SimpleEngine<TestObject> e = new SimpleEngine<TestObject>();
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
-        e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        e.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         LuceneIndex<TestObject> indexD1 =new LuceneIndex<TestObject>("luceneSearchD1",TestObject.class);
         LuceneIndex<TestObject> indexD2 =new LuceneIndex<TestObject>("luceneSearchD2",TestObject.class);
@@ -112,8 +112,8 @@ public class SearchLuceneIndexesTest extends TestCase {
         d2Searcher.setDescriptorExtractor(new D2Extractor());
         d2Searcher.setIndex(indexD2);
 
-        e.getQueryProcessor().setSearcher("d1", d1Searcher);
-        e.getQueryProcessor().setSearcher("d2", d2Searcher);
+        e.setSearcher("d1", d1Searcher);
+        e.setSearcher("d2", d2Searcher);
        
         LuceneIndexEntryFactory<D1> entryFactoryD1 =new LuceneIndexEntryFactory<D1>(D1.class);
         indexD1.setEntryFactory(entryFactoryD1);

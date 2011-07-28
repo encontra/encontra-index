@@ -65,7 +65,7 @@ public class NBTreeIndexTest2 extends TestCase {
         e.setObjectStorage(storage);
 //        e.setQueryProcessor(new QueryProcessorDefaultImpl());
         e.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
-        e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        e.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //A searcher for the filename
         SimpleSearcher filenameSearcher = new SimpleSearcher();
@@ -94,9 +94,9 @@ public class NBTreeIndexTest2 extends TestCase {
         imageSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
         imageSearcher.setResultProvider(new DefaultResultProvider());
 
-        e.getQueryProcessor().setSearcher("filename", filenameSearcher);
-        e.getQueryProcessor().setSearcher("description", descriptionSearcher);
-        e.getQueryProcessor().setSearcher("image", imageSearcher);
+        e.setSearcher("filename", filenameSearcher);
+        e.setSearcher("description", descriptionSearcher);
+        e.setSearcher("image", imageSearcher);
 
         System.out.println("Loading some objects to the test indexes...");
         ImageModelLoader loader = new ImageModelLoader();

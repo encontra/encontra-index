@@ -1,19 +1,19 @@
 package pt.inevo.encontra.luceneapp.test;
 
-import java.io.FileNotFoundException;
-
 import junit.framework.TestCase;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.engine.SimpleEngine;
+import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.search.SimpleSearcher;
+import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
+
+import java.io.FileNotFoundException;
 
 /**
  * Delete an indexobject from a LuceneIndex.
@@ -74,7 +74,7 @@ public class DeleteIndexObjectTest extends TestCase {
         searcher.setIndex(index);
         searcher.setObjectStorage(storage);
         
-        e.getQueryProcessor().setSearcher(TestObject.class.getName(), searcher);
+        e.setSearcher(TestObject.class.getName(), searcher);
         e.setObjectStorage(storage);
        
         LuceneIndexEntryFactory<D1> entryFactory=new LuceneIndexEntryFactory<D1>(D1.class);

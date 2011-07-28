@@ -1,17 +1,15 @@
 package pt.inevo.encontra.luceneapp.test;
 
-import java.io.FileNotFoundException;
-
 import junit.framework.TestCase;
 import org.junit.Test;
-import pt.inevo.encontra.lucene.index.LuceneIndex;
+import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
+import pt.inevo.encontra.lucene.index.LuceneIndex;
 import pt.inevo.encontra.lucene.index.LuceneIndexEntryFactory;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
@@ -21,7 +19,7 @@ import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 
-import javax.persistence.criteria.Expression;
+import java.io.FileNotFoundException;
 
 /**
  * Test for searching through a LuceneIndex.
@@ -58,7 +56,7 @@ public class SearchLuceneIndexTest extends TestCase {
         LuceneEngine<ObjectModel> e = new LuceneEngine<ObjectModel>();
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
         e.setObjectStorage(new SimpleObjectStorage(ObjectModel.class));
-        e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        e.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         LuceneIndex index = new LuceneIndex("luceneSearch", SimpleDescriptor.class);
         SimpleSearcher searcher = new SimpleSearcher();
@@ -70,7 +68,7 @@ public class SearchLuceneIndexTest extends TestCase {
         SimpleDescriptorExtractor d = new SimpleDescriptorExtractor(SimpleDescriptor.class);
         searcher.setDescriptorExtractor(d);
 
-        e.getQueryProcessor().setSearcher("content", searcher);
+        e.setSearcher("content", searcher);
 
         //inserting some objects in the index
         for (int i = 1; i < 10; i++) {

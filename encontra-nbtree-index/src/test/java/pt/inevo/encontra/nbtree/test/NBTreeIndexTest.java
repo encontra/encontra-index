@@ -60,7 +60,7 @@ public class NBTreeIndexTest extends TestCase {
         SimpleEngine<ImageModel> e = new SimpleEngine<ImageModel>();
         e.setObjectStorage(storage);
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
-        e.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        e.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //A searcher for the filename
         SimpleSearcher filenameSearcher = new SimpleSearcher();
@@ -86,9 +86,9 @@ public class NBTreeIndexTest extends TestCase {
         imageSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
         imageSearcher.setResultProvider(new DefaultResultProvider());
 
-        e.getQueryProcessor().setSearcher("filename", filenameSearcher);
-        e.getQueryProcessor().setSearcher("description", descriptionSearcher);
-        e.getQueryProcessor().setSearcher("image", imageSearcher);
+        e.setSearcher("filename", filenameSearcher);
+        e.setSearcher("description", descriptionSearcher);
+        e.setSearcher("image", imageSearcher);
 
         System.out.println("Loading some objects to the test indexes...");
         ImageModelLoader loader = new ImageModelLoader("D:\\work\\ColaDI\\testcases\\test\\database\\additional_images\\27");
