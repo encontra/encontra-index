@@ -21,7 +21,13 @@ import java.io.FileNotFoundException;
  */
 public class DeleteIndexObjectTest extends TestCase {
 
-    public static class TestObject extends IndexedObject<Integer,String> {}
+    public static class TestObject extends IndexedObject<Integer,String> {
+
+        public TestObject() {
+            //IndexedObjects must have a name!
+            super.name = TestObject.class.getName();
+        }
+    }
 
     public static class D1 extends SimpleDescriptor{
         @Override
@@ -94,7 +100,8 @@ public class DeleteIndexObjectTest extends TestCase {
         //performing the query
         TestObject queryObject = new TestObject();
         queryObject.setId(5);
+        queryObject.setValue("Does it work? Event number " + 5);
 
-        assert (e.remove(queryObject) == true);
+        assertTrue (e.remove(queryObject));
     }
 }
