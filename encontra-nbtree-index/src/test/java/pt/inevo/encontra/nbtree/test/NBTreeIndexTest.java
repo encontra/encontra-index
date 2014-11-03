@@ -1,6 +1,7 @@
 package pt.inevo.encontra.nbtree.test;
 
 import junit.framework.TestCase;
+import org.junit.Ignore;
 import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
@@ -8,7 +9,6 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.SimpleSearcher;
@@ -32,6 +32,7 @@ import java.util.Iterator;
  * execution of a similarity query (testing also the combination of the queries).
  * @author ricardo
  */
+@Ignore
 public class NBTreeIndexTest extends TestCase {
 
     public NBTreeIndexTest(String testName) {
@@ -80,9 +81,9 @@ public class NBTreeIndexTest extends TestCase {
         NBTreeSearcher imageSearcher = new NBTreeSearcher();
 //        ParallelNBTreeSearcher imageSearcher = new ParallelNBTreeSearcher();
         //using a single descriptor
-        imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>());
+        //imageSearcher.setDescriptorExtractor(new ColorLayoutDescriptor<IndexedObject>());
         //using a BTreeIndex
-        imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
+        //imageSearcher.setIndex(new BTreeIndex(ColorLayoutDescriptor.class));
         imageSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
         imageSearcher.setResultProvider(new DefaultResultProvider());
 

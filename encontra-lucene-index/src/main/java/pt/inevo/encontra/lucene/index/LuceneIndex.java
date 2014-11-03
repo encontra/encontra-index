@@ -23,9 +23,6 @@ import pt.inevo.encontra.query.criteria.StorageCriteria;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-
 public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements PersistentIndex<O> {
 
     protected String id;

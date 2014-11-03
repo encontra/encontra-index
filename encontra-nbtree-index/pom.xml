@@ -18,30 +18,25 @@
         <dependency>
             <groupId>pt.inevo.encontra</groupId>
             <artifactId>encontra-core-api</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>pt.inevo.encontra</groupId>
             <artifactId>encontra-core</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>jdbm</groupId>
             <artifactId>jdbm</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.inevo.encontra</groupId>
-            <artifactId>encontra-image-descriptors</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>test</scope>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>se.scalablesolutions.akka</groupId>
             <artifactId>akka-actor</artifactId>
-            <version>1.0-RC1</version>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>
 

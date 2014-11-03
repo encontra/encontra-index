@@ -1,6 +1,7 @@
 package pt.inevo.encontra.nbtree.test;
 
 import junit.framework.TestCase;
+import org.junit.Ignore;
 import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
@@ -10,8 +11,8 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
-import pt.inevo.encontra.image.descriptors.ScalableColorDescriptor;
+//import pt.inevo.encontra.image.descriptors.ColorLayoutDescriptor;
+//import pt.inevo.encontra.image.descriptors.ScalableColorDescriptor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.SimpleSearcher;
@@ -36,6 +37,7 @@ import java.util.List;
  * execution of two random queries -> Using a CompositeDescriptor
  * @author ricardo
  */
+@Ignore
 public class NBTreeIndexTest2 extends TestCase {
 
     public NBTreeIndexTest2(String testName) {
@@ -51,6 +53,7 @@ public class NBTreeIndexTest2 extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
+
 
     public void testMain() {
         //Creating the EntityStorage for saving the objects
@@ -82,8 +85,8 @@ public class NBTreeIndexTest2 extends TestCase {
         descriptionSearcher.setResultProvider(new DefaultResultProvider());
 
         CompositeDescriptorExtractor compositeImageDescriptorExtractor = new CompositeDescriptorExtractor(IndexedObject.class, null);
-        compositeImageDescriptorExtractor.addExtractor(new ColorLayoutDescriptor<IndexedObject>(), 1);
-        compositeImageDescriptorExtractor.addExtractor(new ScalableColorDescriptor(), 1);
+        //compositeImageDescriptorExtractor.addExtractor(new ColorLayoutDescriptor<IndexedObject>(), 1);
+        //compositeImageDescriptorExtractor.addExtractor(new ScalableColorDescriptor(), 1);
 
         //A searcher for the image content (using only one type of descriptor
         ParallelNBTreeSearcher imageSearcher = new ParallelNBTreeSearcher();
