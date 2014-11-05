@@ -15,8 +15,6 @@ import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
-import javax.persistence.criteria.Expression;
-
 /**
  * NBTree searcher. Searches in the underlying B+Tree using the NBTree
  * searching solution.
