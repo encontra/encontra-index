@@ -14,6 +14,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.NoLockFactory;
@@ -230,7 +231,9 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
         try {
             this.id = id;
             this.iterator = 0;
-            writer = new IndexWriter(FSDirectory.open(new File(id)), new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
+            Directory directory = FSDirectory.open(new File(id));
+
+            writer = new IndexWriter(directory, new SimpleAnalyzer(), !IndexReader.indexExists(directory), IndexWriter.MaxFieldLength.UNLIMITED);
             this.setEntryFactory(new LuceneIndexEntryFactory(descriptorClass));
         } catch (CorruptIndexException ex) {
             ex.printStackTrace();
