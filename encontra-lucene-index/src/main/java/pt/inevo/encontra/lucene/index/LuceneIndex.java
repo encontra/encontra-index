@@ -337,4 +337,9 @@ public class LuceneIndex<O extends IEntry> extends AbstractIndex<O> implements P
     public void delete(IEntity object) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
+
+
+    public void close() throws IOException {
+        writer.close();
+    }
 }
